@@ -1,14 +1,10 @@
-#!/usr/bin/python
-#Version 2.5 started 2017/09/13, Sam Holt
+#!/usr/bin/python3
 #This script simulates MinION experiments in which multiple different 
 #libraries are loaded, in different quantities, and where the genomes
 #are of different sizes. The overall aim is to try to determine whether read
 #until is useful for optimising this experiment. This may be a means of 
 #simulating sequencing of a specific chromosome from a mixture of chromosomes
 
-#This version modifies the way coverage is mapped to the genome, and
-#consequently runs much faster, since two operations are performed per read
-#where previously this scaled with the read length
 
 import sys
 import library as lib
@@ -20,16 +16,16 @@ import matplotlib.pyplot as plt
 
 ###FUNCTIONS
 
-def Select(simLibs2):
-	bag = []
 
-	for i in range(0, len(simLibs2)):
-		for j in range(0, simLibs2[i].ratio):
-			bag.append(i)
-
-	chosen = random.choice(bag)
-
-	return chosen
+def Incomplete(libraries):
+#This method checks a list of library objects to see if all are complete
+	for i in range(0, len(libraries)):
+		if libraries[i].get_complete() == 0:
+			return 1
+		else:
+			continue
+	
+	return 0	#Only reached if no library is incomplete
 
 
 def SimpleRun(simLibs1):
@@ -59,6 +55,35 @@ def ReadUntil(rUnLibs1):
 	return untRunT
 
 
+def Select(simLibs2):
+	#bag = []
+
+	#for i in range(0, len(simLibs2)):
+	#	for j in range(0, simLibs2[i].ratio):
+	#		bag.append(i)
+
+	#chosen = random.choice(bag)
+
+	#return chosen
+	
+	bag = 0 
+	for lib in simLibs2:
+		entries = lib.gsize * lib.ratio
+		bag += entries
+
+	choice = random.randint(0, bag)
+
+	cumulative = 0
+	i = 0
+	for lib in simLibs2:		
+		end = (lib.gsize * lib.ratio) + cumulative
+		if end >= choice:
+			return i
+		else:
+			cumulative += end
+			i += 1
+
+
 def Pore(selection):
 #Simulates the passage of sequence through pore
 	read = selection.get_read()
@@ -68,17 +93,6 @@ def Pore(selection):
 	selection.add_coverage(readLen, read[0])
 	selection.add_duration(seqTime)
 	return seqTime
-
-
-def Incomplete(libraries):
-#This method checks a list of library objects to see if all are complete
-	for i in range(0, len(libraries)):
-		if libraries[i].get_complete() == 0:
-			return 1
-		else:
-			continue
-	
-	return 0	#Only reached if no library is incomplete
 
 
 def Hours(seconds):
@@ -130,7 +144,7 @@ def Graphs(lib, suffix):
 speed = 450	#rate of sequencing
 interval = 1	#time taken for a pore to acquire new strand
 rejPen = 1	#time taken to reject a strand
-#covDes = 30	#########probably outdate#####
+#covDes = 30	#########probably outdated#####
 idLag = 500	#no. bases needed to map a strand
 rejTime = (interval + rejPen + (idLag/speed))
 
@@ -181,6 +195,7 @@ while Incomplete(simLibs):
 outfile.write("Non-Read Until Results:\n")
 for obj in simLibs:
 	output = Results(obj)
+	print(str(obj.get_coverage()) + " bases sequenced")
 	outfile.write(output + "\n")
 
 print("Total run time = {0}".format(Hours(simTotT)))
@@ -201,6 +216,7 @@ while Incomplete(rUnLibs):
 outfile.write("\nRead Until Results:\n")
 for obj in rUnLibs:
 	output = Results(obj)
+	print(str(obj.get_coverage()) + " bases sequenced")
 	outfile.write(output + "\n")
 
 print("Total run time = {0}".format(Hours(rUnTotT)))

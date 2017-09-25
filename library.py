@@ -1,14 +1,10 @@
-#!/usr/bin/python
-#Version 2.5 started 2017/09/13, Sam Holt
+#!/usr/bin/python3
+
 #This class describes a sequencing library to be put into a specific 
 #nanopore experiment. It therefore generates reads on demand for a 
 #specific genome, and allows for the libraries to be put into the 
 #MinION in ratios other than 1:1
 
-#This version changes the way in which coverage is mapped to the genome. 
-#The first position a read maps to receives a +1 and the position immediately 
-#after receives -1. A new array can be produced which sums these values to 
-#identify the true coverage values for each position
 
 import random
 import numpy as np
