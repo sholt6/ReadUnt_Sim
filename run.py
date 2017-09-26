@@ -58,16 +58,6 @@ def ReadUntil(rUnLibs1):
 
 
 def Select(simLibs2):
-	#bag = []
-
-	#for i in range(0, len(simLibs2)):
-	#	for j in range(0, simLibs2[i].ratio):
-	#		bag.append(i)
-
-	#chosen = random.choice(bag)
-
-	#return chosen
-	
 	bag = 0 
 	for lib in simLibs2:
 		entries = lib.gsize * lib.ratio
@@ -140,9 +130,11 @@ def Graphs(lib, suffix):
 
 def Help():
 	print("Usage: python3 run.py <input_file>\n")
+
 	print("Input files should contain parameters for required libraries")
 	print("and should be in a tab-separated format as follows:")
 	print("<number of bases>   <ratio>   <coverage desired>   <name>\n")
+
 	print("For example:")
 	print("5000000	3	30	\"Genome_A\"")
 	print("7000000	1	30	\"Genome_B\"\n")
@@ -167,7 +159,7 @@ inLibs = []	#Library specifications from input file
 
 #Open input file
 if (len(sys.argv) > 2):
-	print("Too many input files given\n")
+	print("Too many arguments given\n")
 	Help()
 	quit()
 
@@ -182,7 +174,7 @@ fname = sys.argv[1] + "_results"
 outfile = open(fname, "w")
 outfile.write("Parameters for this run were:\n")
 	
-#Read input
+#Read input, add to oupfile for posterity
 for line in inp:
 	outfile.write(line)
 	inline = line.split()
@@ -226,8 +218,8 @@ for obj in simLibs:
 
 print("\nTotal run time = {0}".format(Hours(simTotT)))
 
-for i in range(0, len(simLibs)):
-	Graphs(simLibs[i], "_no_read_until")
+#for i in range(0, len(simLibs)):
+#	Graphs(simLibs[i], "_no_read_until")
 
 
 #####
@@ -247,8 +239,8 @@ for obj in rUnLibs:
 
 print("Total run time = {0}".format(Hours(rUnTotT)))
 
-for i in range(0, len(rUnLibs)):
-	Graphs(rUnLibs[i], "_read_until")
+#for i in range(0, len(rUnLibs)):
+#	Graphs(rUnLibs[i], "_read_until")
 
 end = time.time()
 
