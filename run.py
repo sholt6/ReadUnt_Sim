@@ -159,6 +159,13 @@ try:
 	inp = open(sys.argv[1], 'r')
 except:
 	print("No input file given or file not found")
+	print("Usage: python3 run.py <input_file>\n")
+	print("Input files should contain parameters for required libraries")
+	print("and should be in a tab separated format as follows:")
+	print("<number of bases>   <ratio>   <coverage desired>   <name>\n")
+	print("For example:")
+	print("5000000	3	30	\"Genome_A\"")
+	print("7000000	1	30	\"Genome_B\"\n")
 
 for line in inp:
 	inline = line.split()
