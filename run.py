@@ -58,6 +58,7 @@ def ReadUntil(rUnLibs1):
 
 
 def Select(simLibs2):
+#Selects a library to produce a read from
 	bag = 0 
 	for lib in simLibs2:
 		entries = lib.gsize * lib.ratio
@@ -145,7 +146,7 @@ def Help():
 
 #Define speed of sequencing, interval between sequences, time lost to each 
 #rejection and coverage desired
-speed = 450	#rate of sequencing
+speed = 450	#rate of sequencing - bases/s
 interval = 1	#time taken for a pore to acquire new strand
 rejPen = 1	#time taken to reject a strand
 idLag = 500	#no. bases needed to map a strand
@@ -216,7 +217,7 @@ for obj in simLibs:
 	print(str(obj.get_coverage()) + " bases sequenced")
 	outfile.write(output + "\n")
 
-print("\nTotal run time = {0}".format(Hours(simTotT)))
+print("\nTotal run time = {0}\n".format(Hours(simTotT)))
 
 #for i in range(0, len(simLibs)):
 #	Graphs(simLibs[i], "_no_read_until")
@@ -237,7 +238,7 @@ for obj in rUnLibs:
 	print(str(obj.get_coverage()) + " bases sequenced")
 	outfile.write(output + "\n")
 
-print("Total run time = {0}".format(Hours(rUnTotT)))
+print("\nTotal run time = {0}\n".format(Hours(rUnTotT)))
 
 #for i in range(0, len(rUnLibs)):
 #	Graphs(rUnLibs[i], "_read_until")
