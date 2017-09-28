@@ -18,6 +18,7 @@ class Library:
 		self.name = name
 		self.coverage = 0
 		self.duration = 0
+		self.milestone = 0
 		self.map = np.zeros( (1,gsize) )
 
 	###Read generating method
@@ -48,6 +49,16 @@ class Library:
 
 	def get_needed(self):		#Get required coverage in bases
 		return (self.gsize * self.covDes)
+
+	def get_covDes(self):		#Get desired coverage
+		return covDes
+
+	def get_progress(self):
+		if self.get_cov_ratio() > self.milestone:
+			self.milestone += 5
+			return self.milestone - 5
+		else:
+			return 0
 
 	def get_complete(self):			#Check coverage has been hit
 		if self.coverage < int(self.get_needed()):
