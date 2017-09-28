@@ -88,6 +88,13 @@ def Pore(selection):
 	return seqTime
 
 
+def Progress(lib):
+	hit = lib.get_progress()
+	
+	if hit:
+		print("{0} has reached {1}x coverage"\
+		.format(lib.get_name(), hit))
+
 def Hours(seconds):
 #Converts seconds to hours, rounded to nearest second. Returns a string.
 	m, s = divmod(seconds, 60)
@@ -210,6 +217,9 @@ print("Performing Simple Run:")
 while Incomplete(simLibs):
 	runTime = SimpleRun(simLibs)
 	simTotT += runTime
+
+	for lib in simLibs:
+		Progress(lib)
 
 outfile.write("Non-Read Until Results:\n")
 for obj in simLibs:
