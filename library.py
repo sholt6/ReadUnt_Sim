@@ -23,8 +23,8 @@ class Library:
 	###Read generating method
 	def get_read(self):
 		start = random.randint(0, self.gsize-1)
-		end = start + 5000 #random.randint(start, self.gsize) 
-			#It may be better to define size rather than end
+		length = np.random.gamma(2.5, 3000., 1)
+		end = start + int(length)
 		read = [start, end]
 		return read
 

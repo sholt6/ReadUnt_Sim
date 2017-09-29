@@ -46,14 +46,29 @@ def ReadUntil(rUnLibs1):
 
 	sel = Select(rUnLibs1)
 
+	#If coverage of the library has been achieved:
 	if rUnLibs1[sel].get_coverage() >= rUnLibs1[sel].get_needed():
 		read = rUnLibs1[sel].get_read()
-		rUnLibs1[sel].add_duration(rejTime)
-		rUnLibs1[sel].add_coverage(500, read[0])
-		untRunT = rejTime
+		readLen = read[1] - read[0]
+		seqTime = (readLen / speed) + interval
+		
+		#If the read is shorter than the amount needed to id it:
+		if readLen < idLag:
+			rUnLibs1[sel].add_duration(seqTime)
+			rUnLibs1[sel].add_coverage(readLen, read[0])
+			untRunT = seqTime
+			print("TooShort")
+		#Reject the read:
+		else:
+			rUnLibs1[sel].add_duration(rejTime)
+			rUnLibs1[sel].add_coverage(idLag, read[0])
+			untRunT = rejTime
+
+	#Sequence the read as normal:
 	else:
 		untRunT = Pore(rUnLibs1[sel])
 	
+	#Return time taken to sequence:
 	return untRunT
 
 
@@ -219,8 +234,8 @@ for obj in simLibs:
 
 print("\nTotal run time = {0}\n".format(Hours(simTotT)))
 
-#for i in range(0, len(simLibs)):
-#	Graphs(simLibs[i], "_no_read_until")
+for i in range(0, len(simLibs)):
+	Graphs(simLibs[i], "_no_read_until")
 
 
 #####
@@ -240,8 +255,8 @@ for obj in rUnLibs:
 
 print("\nTotal run time = {0}\n".format(Hours(rUnTotT)))
 
-#for i in range(0, len(rUnLibs)):
-#	Graphs(rUnLibs[i], "_read_until")
+for i in range(0, len(rUnLibs)):
+	Graphs(rUnLibs[i], "_read_until")
 
 end = time.time()
 
