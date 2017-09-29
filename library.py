@@ -18,7 +18,7 @@ class Library:
 		self.name = name
 		self.coverage = 0
 		self.duration = 0
-		self.map = np.zeros( (1,gsize) )
+		self.map = {}
 
 	###Read generating method
 	def get_read(self):
@@ -32,12 +32,19 @@ class Library:
 	def add_coverage(self, increment, start):	#Increase coverage
 		self.coverage += increment
 
-		#If read extends over end of genome, excess is discounted:
-		self.map[0][start] += 1
 		try:
-			self.map[0][start+increment+1] -= 1
+			self.map[start] += 1
 		except:
-			self.map[0][self.gsize-1] -= 1
+			self.map[start] = 1
+
+		end = start + increment + 1
+		if end > self.gsize:
+			end = self.gsize - 1
+
+		try:
+			self.map[end] -= 1
+		except:
+			self.map[end] = -1
 
 
 	def get_coverage(self):			#Get current coverage in bases

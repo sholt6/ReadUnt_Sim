@@ -57,7 +57,7 @@ def ReadUntil(rUnLibs1):
 			rUnLibs1[sel].add_duration(seqTime)
 			rUnLibs1[sel].add_coverage(readLen, read[0])
 			untRunT = seqTime
-			print("TooShort")
+
 		#Reject the read:
 		else:
 			rUnLibs1[sel].add_duration(rejTime)
@@ -131,9 +131,11 @@ def Graphs(lib, suffix):
 #Produces and saves a graph for a given library
 	
 	data = np.zeros( (1, lib.gsize) )
-	
-	for i in range(1, len(lib.map[0])-1):
-		data[0][i] = data[0][i-1] + lib.map[0][i]
+
+	for i in range(0, len(data[0])):
+		data[0][i] = data[0][i-1]
+		if i in lib.map:
+			data[0][i] += lib.map[i]
 	
 	plt.figure(figsize = (8, 6))	
 	plt.plot(data[0])
@@ -234,8 +236,8 @@ for obj in simLibs:
 
 print("\nTotal run time = {0}\n".format(Hours(simTotT)))
 
-for i in range(0, len(simLibs)):
-	Graphs(simLibs[i], "_no_read_until")
+#for i in range(0, len(simLibs)):
+#	Graphs(simLibs[i], "_no_read_until")
 
 
 #####
@@ -255,8 +257,8 @@ for obj in rUnLibs:
 
 print("\nTotal run time = {0}\n".format(Hours(rUnTotT)))
 
-for i in range(0, len(rUnLibs)):
-	Graphs(rUnLibs[i], "_read_until")
+#for i in range(0, len(rUnLibs)):
+#	Graphs(rUnLibs[i], "_read_until")
 
 end = time.time()
 
