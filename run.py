@@ -186,6 +186,7 @@ try:
 except:
 	print("No input file given or file not found")
 	Help()
+	quit()
 
 #Open output file
 fname = sys.argv[1] + "_results"
@@ -205,6 +206,7 @@ for line in inp:
 
 	inLibs.append(inline)
 
+
 inp.close()
 outfile.write("\n")
 
@@ -215,8 +217,6 @@ for i in range(0, len(inLibs)):
 	
 	rUnLibs.append(lib.Library(inLibs[i][0], inLibs[i][1], \
 		inLibs[i][2], inLibs[i][3]))
-
-
 
 
 #####
@@ -236,8 +236,8 @@ for obj in simLibs:
 
 print("\nTotal run time = {0}\n".format(Hours(simTotT)))
 
-#for i in range(0, len(simLibs)):
-#	Graphs(simLibs[i], "_no_read_until")
+for i in range(0, len(simLibs)):
+	Graphs(simLibs[i], "_no_read_until")
 
 
 #####
@@ -257,8 +257,8 @@ for obj in rUnLibs:
 
 print("\nTotal run time = {0}\n".format(Hours(rUnTotT)))
 
-#for i in range(0, len(rUnLibs)):
-#	Graphs(rUnLibs[i], "_read_until")
+for i in range(0, len(rUnLibs)):
+	Graphs(rUnLibs[i], "_read_until")
 
 end = time.time()
 
