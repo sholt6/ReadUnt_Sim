@@ -74,6 +74,7 @@ def ReadUntil(rUnLibs1):
 
 def Select(simLibs2):
 #Selects a library to produce a read from
+	'''	
 	bag = 0 
 	for lib in simLibs2:
 		entries = lib.gsize * lib.ratio
@@ -86,11 +87,29 @@ def Select(simLibs2):
 	for lib in simLibs2:		
 		end = (lib.gsize * lib.ratio) + cumulative
 		if end >= choice:
+			print("End was {0}, choice was {1}, i was {2}".format(end, choice, i))
 			return i
 		else:
 			cumulative += end
 			i += 1
+	'''
+	bag = 0
+	for lib in simLibs2:
+		entries = lib.gsize * lib.ratio
+		bag += entries
 
+	choice = random.randint(0, bag)
+
+	cumulative = 0
+	i = 0
+	for lib in simLibs2:
+		size = lib.gsize * lib.ratio
+		cumulative += size
+
+		if cumulative >= choice:
+			return i
+		else:
+			i += 1
 
 def Pore(selection):
 #Simulates the passage of sequence through pore
@@ -145,6 +164,7 @@ def Graphs(lib, suffix):
 	
 	name = (lib.get_name() + suffix)
 	plt.savefig(name)
+	plt.close()
 
 def Help():
 	print("Usage: python3 run.py <input_file>\n")
@@ -234,10 +254,11 @@ for obj in simLibs:
 	print(str(obj.get_coverage()) + " bases sequenced")
 	outfile.write(output + "\n")
 
-print("\nTotal run time = {0}\n".format(Hours(simTotT)))
+outfile.write("\nTotal Simple run time = {0}\n".format(Hours(simTotT)))
+print("\nTotal Simple run time = {0}\n".format(Hours(simTotT)))
 
-for i in range(0, len(simLibs)):
-	Graphs(simLibs[i], "_no_read_until")
+#for i in range(0, len(simLibs)):
+#	Graphs(simLibs[i], "_no_read_until")
 
 
 #####
@@ -255,11 +276,14 @@ for obj in rUnLibs:
 	print(str(obj.get_coverage()) + " bases sequenced")
 	outfile.write(output + "\n")
 
-print("\nTotal run time = {0}\n".format(Hours(rUnTotT)))
+outfile.write("\nTotal Read Until run time = {0}\n".format(Hours(rUnTotT)))
+print("\nTotal Read Until run time = {0}\n".format(Hours(rUnTotT)))
 
-for i in range(0, len(rUnLibs)):
-	Graphs(rUnLibs[i], "_read_until")
+#for i in range(0, len(rUnLibs)):
+#	Graphs(rUnLibs[i], "_read_until")
 
+
+#Finishing
 end = time.time()
 
 outfile.write("\nThis script took {0:.3f} seconds to complete".format(end-start))
