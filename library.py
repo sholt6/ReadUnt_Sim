@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 #This class describes a sequencing library to be put into a specific 
-#nanopore experiment. It therefore generates reads on demand for a 
+#nanopore experiment. It therefore generates a read on demand for a 
 #specific genome, and allows for the libraries to be put into the 
 #MinION in ratios other than 1:1
 
