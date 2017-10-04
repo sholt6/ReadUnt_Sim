@@ -38,6 +38,7 @@ class Library:
 			self.map[start] = 1
 
 		end = start + increment + 1
+
 		if end > self.gsize:
 			end = self.gsize - 1
 
