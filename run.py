@@ -9,12 +9,53 @@
 import sys
 import library as lib
 import random
-#import datetime
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+from optparse import OptionParser
 
 start = time.time()
+
+# Defining options:
+usage = ("usage: %prog [input_file] args\n\n"
+	"Input files should contain parameters for required libraries\n"
+	"and should be in a tab-separated format as follows:\n"
+	"<number of bases>   <ratio>   <coverage desired>   <name>\n"
+	"For example:\n"
+	"5000000	3	30	\"Genome_A\"\n"
+	"7000000	1	30	\"Genome_B\"\n")
+
+parser = OptionParser(usage = usage)
+
+parser.add_option("-f", "--file", dest="filename",\
+	help = "name of tsv for graphing vals", type="string")
+
+parser.add_option("-v", "--var", dest = "var",\
+	help = "variable to be recorded, speed by default",\
+	type = "string", default = "speed")
+
+parser.add_option("-g", "--graph", dest = "graph",\
+	help = "graphs are output only if this flag is specified",\
+	action = "store_true", default = False)
+
+parser.add_option("-s", "--speed", dest = "speed",\
+	help = "speed of sequencing (b/s), def = 450",\
+	type = "int", default = 450)
+
+parser.add_option("-i", "--interval", dest = "interval",\
+	help = "interval between strands (s), def = 1",\
+	type = "float", default = 1)
+
+parser.add_option("-r", "--rejPen", dest = "rejPen",\
+	help = "penalty for rejecting read (s), def = 1",\
+	type = "float", default = 1)
+
+parser.add_option("-l", "--idLag", dest = "idLag",\
+	help = "bases needed to map strands (b), def = 500",\
+	type = "int", default = 500)
+
+(options, args) = parser.parse_args()
+
 
 ###FUNCTIONS
 
@@ -74,25 +115,6 @@ def ReadUntil(rUnLibs1):
 
 def Select(simLibs2):
 #Selects a library to produce a read from
-	'''	
-	bag = 0 
-	for lib in simLibs2:
-		entries = lib.gsize * lib.ratio
-		bag += entries
-
-	choice = random.randint(0, bag)
-
-	cumulative = 0
-	i = 0
-	for lib in simLibs2:		
-		end = (lib.gsize * lib.ratio) + cumulative
-		if end >= choice:
-			print("End was {0}, choice was {1}, i was {2}".format(end, choice, i))
-			return i
-		else:
-			cumulative += end
-			i += 1
-	'''
 	bag = 0
 	for lib in simLibs2:
 		entries = lib.gsize * lib.ratio
@@ -110,6 +132,7 @@ def Select(simLibs2):
 			return i
 		else:
 			i += 1
+
 
 def Pore(selection):
 #Simulates the passage of sequence through pore
@@ -148,6 +171,8 @@ def Results(library):
 
 def Graphs(lib, suffix):
 #Produces and saves a graph for a given library
+	if options.graph == False:
+		return
 	
 	data = np.zeros( (1, lib.gsize) )
 
@@ -166,28 +191,25 @@ def Graphs(lib, suffix):
 	plt.savefig(name)
 	plt.close()
 
-def Help():
-	print("Usage: python3 run.py <input_file>\n")
-
-	print("Input files should contain parameters for required libraries")
-	print("and should be in a tab-separated format as follows:")
-	print("<number of bases>   <ratio>   <coverage desired>   <name>\n")
-
-	print("For example:")
-	print("5000000	3	30	\"Genome_A\"")
-	print("7000000	1	30	\"Genome_B\"\n")
-
-
 
 ###FUNCTIONS END	
 
+
+
 #Define speed of sequencing, interval between sequences, time lost to each 
 #rejection and coverage desired
-speed = 450	#rate of sequencing - bases/s
-interval = 1	#time taken for a pore to acquire new strand
-rejPen = 1	#time taken to reject a strand
-idLag = 500	#no. bases needed to map a strand
+speed = options.speed		#rate of sequencing - bases/s
+interval = options.interval	#time taken for a pore to acquire new strand
+rejPen = options.rejPen		#time taken to reject a strand
+idLag = options.idLag		#no. bases needed to map a strand
 rejTime = (interval + rejPen + (idLag/speed))
+
+varis = {"speed":speed,
+	"interval":interval,
+	"rejpen":rejPen,
+	"idlag":idLag
+}
+
 
 #####
 #Create requisite libraries:
@@ -196,24 +218,22 @@ rUnLibs = []	#Libraries for read until experiment
 inLibs = []	#Library specifications from input file
 
 #Open input file
-if (len(sys.argv) > 2):
+if (len(args) > 2):
 	print("Too many arguments given\n")
-	Help()
-	quit()
+	parser.print_help()
 
 try:
-	inp = open(sys.argv[1], 'r')
+	inp = open(args[0], 'r')
 except:
 	print("No input file given or file not found")
-	Help()
-	quit()
+	parser.print_help()
 
 #Open output file
-fname = sys.argv[1] + "_results"
+fname = args[0] + "_results"
 outfile = open(fname, "w")
 outfile.write("Parameters for this run were:\n")
 	
-#Read input, add to oupfile for posterity
+#Read input, add to outfile for posterity
 for line in inp:
 	outfile.write(line)
 	inline = line.split()
@@ -257,8 +277,8 @@ for obj in simLibs:
 outfile.write("\nTotal Simple run time = {0}\n".format(Hours(simTotT)))
 print("\nTotal Simple run time = {0}\n".format(Hours(simTotT)))
 
-#for i in range(0, len(simLibs)):
-#	Graphs(simLibs[i], "_no_read_until")
+for i in range(0, len(simLibs)):
+	Graphs(simLibs[i], "_no_read_until")
 
 
 #####
@@ -279,14 +299,23 @@ for obj in rUnLibs:
 outfile.write("\nTotal Read Until run time = {0}\n".format(Hours(rUnTotT)))
 print("\nTotal Read Until run time = {0}\n".format(Hours(rUnTotT)))
 
-#for i in range(0, len(rUnLibs)):
-#	Graphs(rUnLibs[i], "_read_until")
+for i in range(0, len(rUnLibs)):
+	Graphs(rUnLibs[i], "_read_until")
 
+simH = int(simTotT / 3600)
+rUnH = int(rUnTotT / 3600)
+
+out = varis[options.var]
+if options.filename is not None:
+	with open(options.filename, "a") as values:
+		values.write("{0}\t{1}\t{2}\n".format(out, simH, rUnH))
 
 #Finishing
 end = time.time()
 
-outfile.write("\nThis script took {0:.3f} seconds to complete".format(end-start))
-print("\nThis script took {0:.3f} seconds to complete".format(end-start))
+outfile.write("\nThis script took {0:.3f} seconds to complete"\
+	.format(end - start))
+print("\nThis script took {0:.3f} seconds to complete"\
+	.format(end - start))
 
 outfile.close()
