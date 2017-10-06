@@ -5,7 +5,7 @@
 # until is useful for optimising this experiment. This may be a means of
 # simulating sequencing of a specific chromosome from a mixture of chromosomes
 
-
+import os
 import library as lib
 import random
 import time
@@ -198,12 +198,12 @@ interval = options.interval    # time taken for a pore to acquire new strand
 rejPen = options.rejPen        # time taken to reject a strand
 idLag = options.idLag        # no. bases needed to map a strand
 rejTime = (interval + rejPen + (idLag/speed))
-
+'''
 varis = {"speed": speed,
          "interval": interval,
          "rejpen": rejPen,
          "idlag": idLag}
-
+'''
 
 #####
 # Create requisite libraries:
@@ -298,13 +298,25 @@ for i in range(0, len(rUnLibs)):
 
 
 # Output .tsv if needed
+header = "Speed\tInterval\tRejPen\tIdLag\tSimple\tRead.Until\tFold.Change\n"
 simH = int(simTotT / 3600)
 rUnH = int(rUnTotT / 3600)
-
+fc = round((rUnH / simH), 3)
+'''
 out = varis[options.var]
 if options.filename is not None:
     with open(options.filename, "a") as values:
         values.write("{0}\t{1}\t{2}\n".format(out, simH, rUnH))
+'''
+if options.filename is not None:
+    os.system('touch ' + options.filename)
+    if os.stat(options.filename).st_size == 0:
+        with open(options.filename, "w") as values:
+            values.write(header)
+
+    with open(options.filename, "a") as values:
+        values.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\n"
+                     .format(speed, interval, rejPen, idLag, simH, rUnH, fc))
 
 # Finishing
 end = time.time()
