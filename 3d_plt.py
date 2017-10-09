@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 # Produces a 3D scatter plot from a specified .tsv file
 
-import sys
 import re
 import matplotlib.pyplot as plt
 import numpy
@@ -28,14 +27,15 @@ parser.add_option("-l", dest="idLag", action="store_true",
 parser.add_option("-n", dest="simple", action="store_true",
                   help="Use duration of non-read until run as an axis")
 
-parser.add_option("-u", dest="rUntil", action="store_true",
+parser.add_option("-u", dest="readUnt", action="store_true",
                   help="Use duration of read until run as an axis")
 
-parser.add_option("-f", dest="fc", action="store_true",
+parser.add_option("-f", dest="foldChange", action="store_true",
                   help="Use fold change as an axis")
 
 (options, args) = parser.parse_args()
 
+# Checking files have been specified
 try:
     fnames = args
     assert len(fnames) > 0
@@ -47,7 +47,7 @@ except:
 # Getting the data in:
 headPat = ('(Speed)\t(Interval)\t(RejPen)\t(IdLag)\t'
            '(Simple)\t(Read.Until)\t(Fold.Change)')
-dataPat = '(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.\d+)'
+dataPat = '(\d+)\t(\d+)\t(\d+\.*\d*)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.\d+)'
 
 heads = []
 addHead = 1
@@ -84,32 +84,50 @@ for i in range(0, len(fnames)):
         if dmatch:
             speed[i].append(int(dmatch.group(1)))
             interval[i].append(int(dmatch.group(2)))
-            rejPen[i].append(int(dmatch.group(3)))
+            rejPen[i].append(float(dmatch.group(3)))
             idLag[i].append(int(dmatch.group(4)))
             simple[i].append(int(dmatch.group(5)))
             readUnt[i].append(int(dmatch.group(6)))
             foldChange[i].append(float(dmatch.group(7)))
 
+# Determining which axes to graph and ensuring 3 are specified
+axes = []
+
+if options.speed:
+    speedAx = [speed, "Speed (b/s)"]
+    axes.append(speedAx)
+if options.interval:
+    interAx = [interval, "Interval between strands (s)"]
+    axes.append(interAx)
+if options.rejPen:
+    rejPeAx = [rejPen, "Rejection Penalty (s)"]
+    axes.append(rejPeAx)
+if options.idLag:
+    idLagAx = [idLag, "Bases needed to map strand (b)"]
+    axes.append(idLagAx)
+if options.simple:
+    simplAx = [simple, "Duration of non-read until (h)"]
+    axes.append(simplAx)
+if options.readUnt:
+    rUntAx = [readUnt, "Duration of read until (h)"]
+    axes.append(rUntAx)
+if options.foldChange:
+    fcAx = [foldChange, "Fold change (NRU/RU)"]
+    axes.append(fcAx)
+
+if len(axes) != 3:
+    print("\nPlease specify exactly three variables to graph\n")
+    parser.print_help()
+    quit()
+
 
 # Graphing the data
-axisLabs = {"speed": "Speed (b/s)",
-            "interval": "Interval between strands (s)",
-            "rejPen": "Rejection Penalty (s)",
-            "idLag": "Bases needed to map strand (b)",
-            "simple": "Duration of non-read until (h)",
-            "rUntil": "Duration of read until (h)",
-            "fc": "Fold change (RU/NRU)"}
-#############THIS DOESN'T WORK FIX IT NERD
-for opt, value in options.__dict__.items():
-    if options[opt] == value:
-        print("Yes")
-#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^#
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
-xpon = speed
-ypon = foldChange
-zpon = rejPen
+xpon = axes[0][0]
+ypon = axes[1][0]
+zpon = axes[2][0]
 
 for i in range(0, len(fnames)):
     ax.scatter(xpon[i], ypon[i], zpon[i],
@@ -117,8 +135,9 @@ for i in range(0, len(fnames)):
                label=fnames[i])
     ax.legend()
 
-ax.set_xlabel(heads[2])
-ax.set_ylabel(heads[1])
-ax.set_zlabel(heads[0])
+ax.set_xlabel(axes[0][1])
+plt.yticks([0, 1, 2])
+ax.set_ylabel(axes[1][1])
+ax.set_zlabel(axes[2][1])
 
 plt.show()
