@@ -29,10 +29,6 @@ parser = OptionParser(usage=usage)
 parser.add_option("-f", "--file", dest="filename",
                   help="name of tsv for graphing vals", type="string")
 
-parser.add_option("-v", "--var", dest="var",
-                  help="variable to be recorded, speed by default",
-                  type="string", default="speed")
-
 parser.add_option("-g", "--graph", dest="graph",
                   help="graphs are output only if this flag is specified",
                   action="store_true", default=False)
@@ -198,12 +194,6 @@ interval = options.interval    # time taken for a pore to acquire new strand
 rejPen = options.rejPen        # time taken to reject a strand
 idLag = options.idLag        # no. bases needed to map a strand
 rejTime = (interval + rejPen + (idLag/speed))
-'''
-varis = {"speed": speed,
-         "interval": interval,
-         "rejpen": rejPen,
-         "idlag": idLag}
-'''
 
 #####
 # Create requisite libraries:
@@ -301,13 +291,8 @@ for i in range(0, len(rUnLibs)):
 header = "Speed\tInterval\tRejPen\tIdLag\tSimple\tRead.Until\tFold.Change\n"
 simH = int(simTotT / 3600)
 rUnH = int(rUnTotT / 3600)
-fc = round((rUnH / simH), 3)
-'''
-out = varis[options.var]
-if options.filename is not None:
-    with open(options.filename, "a") as values:
-        values.write("{0}\t{1}\t{2}\n".format(out, simH, rUnH))
-'''
+fc = round((simH / rUnH), 3)
+
 if options.filename is not None:
     os.system('touch ' + options.filename)
     if os.stat(options.filename).st_size == 0:
