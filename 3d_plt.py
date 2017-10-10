@@ -7,6 +7,7 @@ import numpy
 from mpl_toolkits.mplot3d import Axes3D
 from optparse import OptionParser
 
+# Usage and optparser
 usage = ("Usage: %prog [flag] [flag] [flag] <input1> <input2> <input3> ...\n"
          "Specify three parameters to graph and .tsv files to provide data")
 
@@ -34,6 +35,46 @@ parser.add_option("-f", dest="foldChange", action="store_true",
                   help="Use fold change as an axis")
 
 (options, args) = parser.parse_args()
+
+# Graphing Functions
+def TwoDPlot():
+    fig = plt.figure
+
+    xpon = axes[0][0]
+    ypon = axes[1][0]
+
+    for i in range(0, len(fnames)):
+        plt.scatter(xpon[i], ypon[i],
+                    label=fnames[i])
+        plt.legend()
+
+    plt.xlabel(axes[0][1])
+#    plt.yticks([0, 1, 2])
+    plt.ylabel(axes[1][1])
+
+    plt.show()
+
+def ThreeDPlot():
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    xpon = axes[0][0]
+    ypon = axes[1][0]
+    zpon = axes[2][0]
+
+    for i in range(0, len(fnames)):
+        ax.scatter(xpon[i], ypon[i], zpon[i],
+                   color=numpy.random.rand(3,),
+                   label=fnames[i])
+        ax.legend()
+
+    ax.set_xlabel(axes[0][1])
+    plt.yticks([0, 1, 2])
+    ax.set_ylabel(axes[1][1])
+    ax.set_zlabel(axes[2][1])
+
+    plt.show()
+
 
 # Checking files have been specified
 try:
@@ -115,29 +156,13 @@ if options.foldChange:
     fcAx = [foldChange, "Fold change (NRU/RU)"]
     axes.append(fcAx)
 
-if len(axes) != 3:
-    print("\nPlease specify exactly three variables to graph\n")
+# Plotting the data
+if len(axes) == 2:
+    TwoDPlot()
+elif len(axes) == 3:
+    ThreeDPlot()
+else:
+    print("\nPlease specify two or three variables to graph\n")
     parser.print_help()
     quit()
 
-
-# Graphing the data
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-
-xpon = axes[0][0]
-ypon = axes[1][0]
-zpon = axes[2][0]
-
-for i in range(0, len(fnames)):
-    ax.scatter(xpon[i], ypon[i], zpon[i],
-               color=numpy.random.rand(3,),
-               label=fnames[i])
-    ax.legend()
-
-ax.set_xlabel(axes[0][1])
-plt.yticks([0, 1, 2])
-ax.set_ylabel(axes[1][1])
-ax.set_zlabel(axes[2][1])
-
-plt.show()
