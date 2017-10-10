@@ -49,6 +49,10 @@ parser.add_option("-l", "--idLag", dest="idLag",
                   help="bases needed to map strands (b), def = 500",
                   type="int", default=500)
 
+parser.add_option("-c", "--scale", dest="scale",
+                  help="scale value for read generator, def = 3000,",
+                  type="float", default=3000)
+
 (options, args) = parser.parse_args()
 
 
@@ -189,10 +193,11 @@ def Graphs(lib, suffix):
 
 # Define speed of sequencing, interval between sequences, time lost to each
 # rejection and coverage desired
-speed = options.speed        # rate of sequencing - bases/s
+speed = options.speed          # rate of sequencing - bases/s
 interval = options.interval    # time taken for a pore to acquire new strand
 rejPen = options.rejPen        # time taken to reject a strand
-idLag = options.idLag        # no. bases needed to map a strand
+idLag = options.idLag          # no. bases needed to map a strand
+scale = options.scale          # scale value for read generator
 rejTime = (interval + rejPen + (idLag/speed))
 
 #####
@@ -237,10 +242,10 @@ outfile.write("\n")
 # Initialise library objects from input
 for i in range(0, len(inLibs)):
     simLibs.append(lib.Library(inLibs[i][0], inLibs[i][1],
-                   inLibs[i][2], inLibs[i][3]))
+                   inLibs[i][2], scale, inLibs[i][3]))
 
     rUnLibs.append(lib.Library(inLibs[i][0], inLibs[i][1],
-                   inLibs[i][2], inLibs[i][3]))
+                   inLibs[i][2], scale, inLibs[i][3]))
 
 
 #####

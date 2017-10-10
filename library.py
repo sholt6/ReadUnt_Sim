@@ -12,10 +12,11 @@ import numpy as np
 
 class Library:
 
-    def __init__(self, gsize, ratio, covDes, name="Unamed Library"):
+    def __init__(self, gsize, ratio, covDes, scale, name="Unamed Library"):
         self.gsize = gsize
         self.ratio = ratio
         self.covDes = covDes
+        self.scale = scale
         self.name = name
         self.coverage = 0
         self.duration = 0
@@ -24,7 +25,7 @@ class Library:
     # Read generating method
     def get_read(self):
         start = random.randint(0, self.gsize-1)
-        length = np.random.gamma(2.5, 3000., 1)
+        length = np.random.gamma(2.5, self.scale, 1)
         end = start + int(length)
         read = [start, end]
         return read
