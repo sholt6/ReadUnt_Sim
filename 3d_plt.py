@@ -36,10 +36,9 @@ parser.add_option("-f", dest="foldChange", action="store_true",
 
 (options, args) = parser.parse_args()
 
+
 # Graphing Functions
 def TwoDPlot():
-    fig = plt.figure
-
     xpon = axes[0][0]
     ypon = axes[1][0]
 
@@ -53,6 +52,7 @@ def TwoDPlot():
     plt.ylabel(axes[1][1])
 
     plt.show()
+
 
 def ThreeDPlot():
     fig = plt.figure()
@@ -165,4 +165,3 @@ else:
     print("\nPlease specify two or three variables to graph\n")
     parser.print_help()
     quit()
-
