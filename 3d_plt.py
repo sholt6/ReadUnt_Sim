@@ -3,7 +3,7 @@
 
 import re
 import matplotlib.pyplot as plt
-import numpy
+import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 from optparse import OptionParser
 
@@ -34,6 +34,9 @@ parser.add_option("-u", dest="readUnt", action="store_true",
 parser.add_option("-f", dest="foldChange", action="store_true",
                   help="Use fold change as an axis")
 
+parser.add_option("-b", dest="bar", action="store_true",
+                  help="Plot a bar graph")
+
 (options, args) = parser.parse_args()
 
 
@@ -43,13 +46,22 @@ def TwoDPlot():
     ypon = axes[1][0]
 
     for i in range(0, len(fnames)):
-        plt.scatter(xpon[i], ypon[i],
+        plt.plot(xpon[i], ypon[i], marker='o',
                     label=fnames[i])
         plt.legend()
+#        plt.legend(['Rejection Penalty 0', 'Rejection Penalty 1', 'Rejection Penalty 2'])
+#        plt.legend(['Rejection Penalty 0', 'Rejection Penalty 1', 'Rejection Penalty 2', 'Rejection Penalty 0, Interval 0'])
+#        plt.legend(['Rejection Penalty 0', 'Rejection Penalty 1', 'Rejection Penalty 2', 'Rejection Penalty 0, 128 Events'])
+#        plt.legend(['Rejection Penalty 0', 'Rejection Penalty 1', 'Rejection Penalty 2', 'Rejection Penalty 0, Interval 0', 'Rejection Penalty 0, 128 Events'])
+#        plt.legend(['Rejection Penalty 0, 500 Events', 'Rejection Penalty 0, 128 Events'])
+
+#    plt.title("")             # Add a title
 
     plt.xlabel(axes[0][1])
-#    plt.yticks([0, 1, 2])
+#    plt.yticks([0, 1, 2])     # Control Y ticks
     plt.ylabel(axes[1][1])
+
+#    plt.ylim((0,44))           # Control Y axis
 
     plt.show()
 
@@ -69,12 +81,32 @@ def ThreeDPlot():
         ax.legend()
 
     ax.set_xlabel(axes[0][1])
-    plt.yticks([0, 1, 2])
+    # plt.yticks([0, 1, 2])
     ax.set_ylabel(axes[1][1])
     ax.set_zlabel(axes[2][1])
 
     plt.show()
 
+
+def BarPlot():
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    xpon = axes[0][0]
+    ypon = axes[1][0]
+
+    for i in range(0, len(fnames)):
+        ax.bar(xpon[i], ypon[i])
+
+    plt.legend(['100kb read average, 128b to ID', '7.5kb read average, 128b to ID'])
+    ax.set_xticks([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24])
+    ax.set_xticklabels([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,'X','Y'])
+#    ax.set_yticks(np.arange(2, 6, 1))
+
+    ax.set_xlabel(axes[0][1])
+    ax.set_ylabel(axes[1][1])
+
+    plt.show()
 
 # Checking files have been specified
 try:
@@ -88,7 +120,7 @@ except:
 # Getting the data in:
 headPat = ('(Speed)\t(Interval)\t(RejPen)\t(IdLag)\t'
            '(Simple)\t(Read.Until)\t(Fold.Change)')
-dataPat = '(\d+)\t(\d+)\t(\d+\.*\d*)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.\d+)'
+dataPat = '(\d+)\t(\d+\.*\d*)\t(\d+\.*\d*)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.\d+)'
 
 heads = []
 addHead = 1
@@ -124,18 +156,18 @@ for i in range(0, len(fnames)):
         dmatch = re.match(dataPat, line)
         if dmatch:
             speed[i].append(int(dmatch.group(1)))
-            interval[i].append(int(dmatch.group(2)))
+            interval[i].append(float(dmatch.group(2)))
             rejPen[i].append(float(dmatch.group(3)))
             idLag[i].append(int(dmatch.group(4)))
             simple[i].append(int(dmatch.group(5)))
             readUnt[i].append(int(dmatch.group(6)))
             foldChange[i].append(float(dmatch.group(7)))
 
-# Determining which axes to graph and ensuring 3 are specified
+# Determining which axes to graph and ensuring 2 or 3 are specified
 axes = []
 
 if options.speed:
-    speedAx = [speed, "Speed (b/s)"]
+    speedAx = [speed, "Chromosome Number"]#"Speed (b/s)"]
     axes.append(speedAx)
 if options.interval:
     interAx = [interval, "Interval between strands (s)"]
@@ -153,11 +185,13 @@ if options.readUnt:
     rUntAx = [readUnt, "Duration of read until (h)"]
     axes.append(rUntAx)
 if options.foldChange:
-    fcAx = [foldChange, "Fold change (NRU/RU)"]
+    fcAx = [foldChange, "Read Until Y Times Faster"]
     axes.append(fcAx)
 
 # Plotting the data
-if len(axes) == 2:
+if options.bar is True:
+    BarPlot()
+elif len(axes) == 2:
     TwoDPlot()
 elif len(axes) == 3:
     ThreeDPlot()
