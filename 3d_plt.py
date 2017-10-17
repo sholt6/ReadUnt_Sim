@@ -76,7 +76,7 @@ def ThreeDPlot():
 
     for i in range(0, len(fnames)):
         ax.scatter(xpon[i], ypon[i], zpon[i],
-                   color=numpy.random.rand(3,),
+                   color=np.random.rand(3,),
                    label=fnames[i])
         ax.legend()
 
