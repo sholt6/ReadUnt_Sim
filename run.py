@@ -53,6 +53,10 @@ parser.add_option("-c", "--scale", dest="scale",
                   help="scale value for read generator, def = 3000,",
                   type="float", default=3000)
 
+parser.add_option("-n", "--name", dest="name",
+                  help="optional name for this run in .tsv output from -f",
+                  type="string", default="NA")
+
 (options, args) = parser.parse_args()
 
 
@@ -75,9 +79,12 @@ def SimpleRun(simLibs1):
 
     sel = Select(simLibs1)
 
-    simRunT = Pore(simLibs1[sel])
+    simRunT, readLen = Pore(simLibs1[sel])
+    # For SimpleRun(), sequenced is identical to readLen but is included for
+    # symmetry with ReadUntil()
+    sequenced = readLen
 
-    return simRunT
+    return simRunT, readLen, sequenced
 
 
 # Simulates an experiment with read until
@@ -95,20 +102,31 @@ def ReadUntil(rUnLibs1):
         if readLen < idLag:
             rUnLibs1[sel].add_duration(seqTime)
             rUnLibs1[sel].add_coverage(readLen, read[0])
-            untRunT = seqTime
+            sequenced = readLen
+
+            try:
+                assert(readLen < idLag)
+            except:
+                print("Read Until method mishandled a >500b read")
+                quit()
+
+            return seqTime, readLen, sequenced
 
         # Reject the read:
         else:
             rUnLibs1[sel].add_duration(rejTime)
             rUnLibs1[sel].add_coverage(idLag, read[0])
-            untRunT = rejTime
+            sequenced = idLag
+
+            return rejTime, readLen, sequenced
 
     # Sequence the read as normal:
     else:
-        untRunT = Pore(rUnLibs1[sel])
+        untRunT, readLen = Pore(rUnLibs1[sel])
+        sequenced = readLen
 
     # Return time taken to sequence:
-    return untRunT
+    return untRunT, readLen, sequenced
 
 
 # Selects a library to produce a read from
@@ -140,7 +158,7 @@ def Pore(selection):
 
     selection.add_coverage(readLen, read[0])
     selection.add_duration(seqTime)
-    return seqTime
+    return seqTime, readLen
 
 
 # Converts seconds to hours, rounded to nearest second. Returns a string
@@ -193,6 +211,7 @@ def Graphs(lib, suffix):
 
 # Define speed of sequencing, interval between sequences, time lost to each
 # rejection and coverage desired
+experimentName = options.name
 speed = options.speed          # rate of sequencing - bases/s
 interval = options.interval    # time taken for a pore to acquire new strand
 rejPen = options.rejPen        # time taken to reject a strand
@@ -204,7 +223,7 @@ rejTime = (interval + rejPen + (idLag/speed))
 # Create requisite libraries:
 simLibs = []    # Libraries for simple experiment
 rUnLibs = []    # Libraries for read until experiment
-inLibs = []        # Library specifications from input file
+inLibs = []     # Library specifications from input file
 
 # Open input file
 if (len(args) > 2):
@@ -222,7 +241,7 @@ fname = args[0] + "_results"
 outfile = open(fname, "w")
 outfile.write("Parameters for this run were:\n")
 
-# Read input, add to outfile for posterity
+# Read input, add to results file for posterity
 for line in inp:
     outfile.write(line)
     inline = line.split()
@@ -251,11 +270,17 @@ for i in range(0, len(inLibs)):
 #####
 # Run the simple experiment
 simTotT = 0                # Variable for recording total duration
+simReads = []              # List of read lengths
+simBases = 0               # Total bases sequenced
 
 print("Performing Simple Run:")
 while Incomplete(simLibs):
-    runTime = SimpleRun(simLibs)
+    (runTime, read, sequenced) = SimpleRun(simLibs)
     simTotT += runTime
+    simReads.append(read)
+    simBases += sequenced
+
+simAvgRead = int(np.mean(simReads))  # Average read length for simple
 
 outfile.write("Non-Read Until Results:\n")
 for obj in simLibs:
@@ -273,11 +298,17 @@ for i in range(0, len(simLibs)):
 #####
 # Run the read until experiment
 rUnTotT = 0                # Variable for recording total duration
+rUnReads = []              # List of read lengths
+rUnBases = 0               # Total bases sequenced
 
 print("\nPerforming Read Until Run:")
 while Incomplete(rUnLibs):
-    runTime = ReadUntil(rUnLibs)
+    (runTime, read, sequenced) = ReadUntil(rUnLibs)
     rUnTotT += runTime
+    rUnReads.append(read)
+    rUnBases += sequenced
+   
+rUnAvgRead = int(np.mean(rUnReads)) # Average read length for read until 
 
 outfile.write("\nRead Until Results:\n")
 for obj in rUnLibs:
@@ -291,12 +322,17 @@ print("\nTotal Read Until run time = {0}\n".format(Hours(rUnTotT)))
 for i in range(0, len(rUnLibs)):
     Graphs(rUnLibs[i], "_read_until")
 
+readAvg = np.mean((simAvgRead, rUnAvgRead))
+readAvg = round(readAvg,)
 
 # Output .tsv if needed
-header = "Speed\tInterval\tRejPen\tIdLag\tSimple\tRead.Until\tFold.Change\n"
+header = ("Name\tSpeed\tInterval\tRejPen\tIdLag\tSimple.Hours\tRead.Until.Hours"
+         "\tSimple.Bases\tRead.Until.Bases\tAvg.Read\tFold.Change.Hours"
+         "\tFold.Change.Bases\n")
 simH = int(simTotT / 3600)
 rUnH = int(rUnTotT / 3600)
-fc = round((simH / rUnH), 3)
+fcHours = round((simH / rUnH), 3)
+fcBases = round((simBases / rUnBases), 3)
 
 if options.filename is not None:
     os.system('touch ' + options.filename)
@@ -305,8 +341,10 @@ if options.filename is not None:
             values.write(header)
 
     with open(options.filename, "a") as values:
-        values.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\n"
-                     .format(speed, interval, rejPen, idLag, simH, rUnH, fc))
+        values.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}"
+                     "\t{7}\t{8}\t{9}\t{10}\t{11}\n"
+                     .format(experimentName, speed, interval, rejPen, idLag, 
+                     simH, rUnH, simBases, rUnBases, readAvg, fcHours, fcBases))
 
 # Finishing
 end = time.time()
