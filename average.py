@@ -42,4 +42,19 @@ for i in range(1, len(data)):
             print("Dataframe columns do not match")
             quit()
 
+# At this point we have a list of appropriately formatted dataframes to average
+# Concatenate dataframes and produce means
+df_concat = pd.concat(data)
+by_row_index = df_concat.groupby(df_concat.index)
+df_means = by_row_index.mean()
 
+# If Names column contains strings, they are absent from df_means.
+# This block restores them
+try:
+    df_means['Name']
+except KeyError:
+    df_means.insert(0, 'Name',
+                    pd.Series(data[0]['Name'].values, index=df_means.index))
+
+# Output to new .tsv file
+df_means.to_csv('RENAME_ME.tsv', sep='\t', index=False)
