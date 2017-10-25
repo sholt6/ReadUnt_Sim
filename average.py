@@ -18,7 +18,15 @@ if not args:
 data = []
 
 for fname in args:
-    df = pd.read_csv(fname, sep='\t')
+    try:
+        df = pd.read_csv(fname, sep='\t')
+    except FileNotFoundError:
+        print("{0} was not found".format(fname))
+        quit()
+    except pd.errors.EmptyDataError:
+        print("{0} contains no data".format(fname))
+        quit()
+
     data.append(df)
 
 # Assert more than one dataframe has been put in
@@ -26,6 +34,7 @@ try:
     assert(len(data) > 1)
 except:
     print("Please specify at least two files")
+    quit()
 
 # Check dataframes are of same structure
 for i in range(1, len(data)):
@@ -48,7 +57,7 @@ df_concat = pd.concat(data)
 by_row_index = df_concat.groupby(df_concat.index)
 df_means = by_row_index.mean()
 
-# If Names column contains strings, they are absent from df_means.
+# If Name column contains strings, they are absent from df_means.
 # This block restores them
 try:
     df_means['Name']
@@ -57,4 +66,7 @@ except KeyError:
                     pd.Series(data[0]['Name'].values, index=df_means.index))
 
 # Output to new .tsv file
-df_means.to_csv('RENAME_ME.tsv', sep='\t', index=False)
+try:
+    df_means.to_csv('RENAME_ME.tsv', sep='\t', index=False)
+except:
+    print("Unable to output results to file")
