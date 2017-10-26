@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # This script simulates MinION experiments in which multiple different
-# libraries are loaded, in different quantities, and where the genomes
+# libraries may be loaded, in different quantities, and where the genomes
 # are of different sizes. The overall aim is to try to determine whether read
 # until is useful for optimising this experiment. This may be a means of
 # simulating sequencing of a specific chromosome from a mixture of chromosomes
