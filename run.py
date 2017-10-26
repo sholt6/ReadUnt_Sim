@@ -233,8 +233,9 @@ if (len(args) > 2):
 try:
     inp = open(args[0], 'r')
 except:
-    print("No input file given or file not found")
+    print("ERROR: No input file given or file not found\n")
     parser.print_help()
+    quit()
 
 # Open output file
 fname = args[0] + "_results"
