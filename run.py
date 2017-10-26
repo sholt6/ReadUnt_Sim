@@ -308,8 +308,8 @@ while Incomplete(rUnLibs):
     rUnTotT += runTime
     rUnReads.append(read)
     rUnBases += sequenced
-   
-rUnAvgRead = int(np.mean(rUnReads)) # Average read length for read until 
+
+rUnAvgRead = int(np.mean(rUnReads))   # Average read length for read until
 
 outfile.write("\nRead Until Results:\n")
 for obj in rUnLibs:
@@ -327,9 +327,9 @@ readAvg = np.mean((simAvgRead, rUnAvgRead))
 readAvg = round(readAvg,)
 
 # Output .tsv if needed
-header = ("Name\tSpeed\tInterval\tRejPen\tIdLag\tSimple.Hours\tRead.Until.Hours"
-         "\tSimple.Bases\tRead.Until.Bases\tAvg.Read\tFold.Change.Hours"
-         "\tFold.Change.Bases\n")
+header = ("Name\tSpeed\tInterval\tRejPen\tIdLag\tSimple.Hours"
+          "\tRead.Until.Hours\tSimple.Bases\tRead.Until.Bases\tAvg.Read"
+          "\tFold.Change.Hours\tFold.Change.Bases\n")
 simH = int(simTotT / 3600)
 rUnH = int(rUnTotT / 3600)
 fcHours = round((simH / rUnH), 3)
@@ -344,8 +344,9 @@ if options.filename is not None:
     with open(options.filename, "a") as values:
         values.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}"
                      "\t{7}\t{8}\t{9}\t{10}\t{11}\n"
-                     .format(experimentName, speed, interval, rejPen, idLag, 
-                     simH, rUnH, simBases, rUnBases, readAvg, fcHours, fcBases))
+                     .format(experimentName, speed, interval, rejPen, idLag,
+                             simH, rUnH, simBases, rUnBases, readAvg, fcHours,
+                             fcBases))
 
 # Finishing
 end = time.time()
