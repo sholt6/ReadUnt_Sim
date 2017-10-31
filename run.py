@@ -249,7 +249,7 @@ for line in inp:
 
     for i in range(0, len(inline)):
         try:
-            inline[i] = int(inline[i])
+            inline[i] = float(inline[i])
         except:
             pass
 
