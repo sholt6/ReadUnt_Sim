@@ -136,7 +136,7 @@ def Select(simLibs2):
         entries = obj.gsize * obj.ratio
         bag += entries
 
-    choice = random.randint(0, bag)
+    choice = random.randint(0, int(bag))
 
     cumulative = 0
     i = 0
