@@ -12,7 +12,8 @@ import numpy as np
 
 class Library:
 
-    def __init__(self, gsize, ratio, covDes, scale, name="Unamed Library"):
+    def __init__(self, gsize, ratio, covDes, scale, mapReads,
+                 name="Unamed Library"):
         self.gsize = gsize
         self.ratio = ratio
         self.covDes = covDes
@@ -21,6 +22,7 @@ class Library:
         self.coverage = 0
         self.duration = 0
         self.map = {}
+        self.mapReads = mapReads
 
     # Read generating method
     def get_read(self):
@@ -34,20 +36,21 @@ class Library:
     def add_coverage(self, increment, start):    # Increase coverage
         self.coverage += increment
 
-        try:
-            self.map[start] += 1
-        except:
-            self.map[start] = 1
+        if self.mapReads is True:
+            try:
+                self.map[start] += 1
+            except:
+                self.map[start] = 1
 
-        end = start + increment + 1
+            end = start + increment + 1
 
-        if end > self.gsize:
-            end = self.gsize - 1
+            if end > self.gsize:
+                end = self.gsize - 1
 
-        try:
-            self.map[end] -= 1
-        except:
-            self.map[end] = -1
+            try:
+                self.map[end] -= 1
+            except:
+                self.map[end] = -1
 
     def get_coverage(self):             # Get current coverage in bases
         return self.coverage

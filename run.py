@@ -33,6 +33,10 @@ parser.add_option("-g", "--graph", dest="graph",
                   help="graphs are output only if this flag is specified",
                   action="store_true", default=False)
 
+parser.add_option("-m", "--map", dest="map",
+                  help="store a coverage map of each library",
+                  action="store_true", default=False)
+
 parser.add_option("-s", "--speed", dest="speed",
                   help="speed of sequencing (b/s), def = 450",
                   type="int", default=450)
@@ -219,6 +223,11 @@ idLag = options.idLag          # no. bases needed to map a strand
 scale = options.scale          # scale value for read generator
 rejTime = (interval + rejPen + (idLag/speed))
 
+if options.graph is True:
+    options.map = True
+
+mapReads = options.map
+
 #####
 # Create requisite libraries:
 simLibs = []    # Libraries for simple experiment
@@ -262,10 +271,10 @@ outfile.write("\n")
 # Initialise library objects from input
 for i in range(0, len(inLibs)):
     simLibs.append(lib.Library(inLibs[i][0], inLibs[i][1],
-                   inLibs[i][2], scale, inLibs[i][3]))
+                   inLibs[i][2], scale, inLibs[i][3], mapReads))
 
     rUnLibs.append(lib.Library(inLibs[i][0], inLibs[i][1],
-                   inLibs[i][2], scale, inLibs[i][3]))
+                   inLibs[i][2], scale, inLibs[i][3], mapReads))
 
 
 #####
@@ -347,7 +356,7 @@ if options.filename is not None:
                      .format(experimentName, speed, interval, rejPen, idLag,
                              simH, rUnH, simBases, rUnBases, readAvg, fcHours,
                              fcBases))
-
+print(simLibs[0].map)
 # Finishing
 end = time.time()
 
