@@ -193,7 +193,7 @@ def Graphs(lib, suffix):
     if options.graph is False:
         return
 
-    data = np.zeros((1, lib.gsize))
+    data = np.zeros((1, int(lib.gsize)))
 
     for i in range(0, len(data[0])):
         data[0][i] = data[0][i-1]
@@ -271,10 +271,10 @@ outfile.write("\n")
 # Initialise library objects from input
 for i in range(0, len(inLibs)):
     simLibs.append(lib.Library(inLibs[i][0], inLibs[i][1],
-                   inLibs[i][2], scale, inLibs[i][3], mapReads))
+                   inLibs[i][2], scale, mapReads, inLibs[i][3]))
 
     rUnLibs.append(lib.Library(inLibs[i][0], inLibs[i][1],
-                   inLibs[i][2], scale, inLibs[i][3], mapReads))
+                   inLibs[i][2], scale, mapReads, inLibs[i][3]))
 
 
 #####
@@ -356,7 +356,7 @@ if options.filename is not None:
                      .format(experimentName, speed, interval, rejPen, idLag,
                              simH, rUnH, simBases, rUnBases, readAvg, fcHours,
                              fcBases))
-print(simLibs[0].map)
+
 # Finishing
 end = time.time()
 

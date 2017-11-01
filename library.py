@@ -12,7 +12,7 @@ import numpy as np
 
 class Library:
 
-    def __init__(self, gsize, ratio, covDes, scale, mapReads,
+    def __init__(self, gsize, ratio, covDes, scale, mapReads=False,
                  name="Unamed Library"):
         self.gsize = gsize
         self.ratio = ratio
