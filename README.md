@@ -1,5 +1,5 @@
 # ReadUnt_Sim
-
+For assistance, contact Sam Holt at sam_holt30@hotmail.co.uk
 ## Quick Start
 
 Download run.py and library.py and run from the command line:
@@ -7,6 +7,11 @@ Download run.py and library.py and run from the command line:
     python3 run.py <input file> [OPTS]
 
 An example can be found in the Example folder.
+
+## Requirements
+The following modules must be installed:
+    - numpy
+    - matplotlib
 
 ## Read Until Simulator
 This script is intended to simulate a nanopore sequencing experiment with and without read until applied, to offer an estimate of the benefit in a given circumstance.
