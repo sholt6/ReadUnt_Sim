@@ -3,6 +3,7 @@
 ## Quick Start
 
 Download run.py and library.py and run from the command line:
+
     python3 run.py <input file> [OPTS]
 
 An example can be found in the Example folder.
@@ -28,4 +29,5 @@ An input file must be provided, to describe the input DNA and its coverage goals
 
 ## Input Files
 The input file must be a tab-separated value file in which each line describes something in the input library. These may be individual chromosomes, whole genomes, or anything else required. The columns are as follows:
-    Size in base pairs  Relative Copy Number    Desired Coverage    Name
+
+    Size in base pairs    Relative Copy Number      Desired Coverage        Name
