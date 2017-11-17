@@ -16,7 +16,7 @@ import matplotlib.pylab as plt
 
 shape, scale = 2.5, 3000.
 
-if len(sys.argv) == 1:
+if len(sys.argv) == 2:
     try:
         scale = float(sys.argv[1])
     except:
