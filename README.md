@@ -10,8 +10,8 @@ Examples can be found in example.md.
 
 ## Requirements
 The following modules must be installed:
-    - numpy
-    - matplotlib
+- numpy
+- matplotlib
 
 ## Read Until Simulator
 This script is intended to simulate a nanopore sequencing experiment with and without read until applied, to offer an estimate of the benefit in a given circumstance.
@@ -37,3 +37,16 @@ The hours values output by the script **should not be taken as accurate estimate
 The input file must be a tab-separated value file in which each line describes something in the input library. These may be individual chromosomes, whole genomes, or anything else required. The columns are as follows:
 
     Size in base pairs    Relative Copy Number      Desired Coverage        Name
+
+## Other Files In This Repository
+There are other Python scripts in this repository besides run.py and library.py. These include:
+- average.py
+  - Accepts a list of .tsv files of same shape and size, and attempts to average corresponding values.
+- npore.py
+  - This was intended to be used in a more detailed simulation which would have included multiple nanopores. It is incomplete.
+- readgen.py 
+  - Can be used to help determine what scale value should be used in the run.py -c option to give a desired mean read length
+- replace.py
+  - This was used in the results of some metagenomics experiments to replace genome percentage values with base percentage values. It is not written for generalised usage
+- specimen_plot.ipynb
+  - A Jupyter Notebook which was used as a base from which to create specific plots of results
