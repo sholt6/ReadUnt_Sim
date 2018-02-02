@@ -36,7 +36,7 @@ The hours values output by the script **should not be taken as accurate estimate
 ## Input Files
 The input file must be a tab-separated value file in which each line describes something in the input library. These may be individual chromosomes, whole genomes, or anything else required. The columns are as follows:
 
-    Size in base pairs    Relative Copy Number      Desired Coverage        Name
+    Size in base pairs  |  Relative Copy Number   |   Desired Coverage    |    Name
 
 ## Other Files In This Repository
 There are other Python scripts in this repository besides run.py and library.py. These include:
