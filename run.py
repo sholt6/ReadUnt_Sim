@@ -215,25 +215,25 @@ def main():
     (options, args) = parser.parse_args()
     # Define speed of sequencing, interval between sequences, time lost to each
     # rejection and coverage desired
-    experimentName = options.name
+    experiment_name = options.name
     speed = options.speed          # rate of sequencing - bases/s
     interval = options.interval    # time taken for a pore to acquire new strand
-    rejPen = options.rejPen        # time taken to reject a strand
-    idLag = options.idLag          # no. bases needed to map a strand
-    scale = options.scale          # scale value for read generator
+    rejection_penalty = options.rejPen        # time taken to reject a strand
+    identification_lag = options.idLag          # no. bases needed to map a strand
+    scale_value = options.scale          # scale value for read generator
     graph = options.graph
-    rejTime = (interval + rejPen + (idLag/speed))
+    rejection_time = ( interval + rejection_penalty + ( identification_lag / speed ) )
 
     if options.graph is True:
         options.map = True
 
-    mapReads = options.map
+    map_reads = options.map
 
     #####
     # Create requisite libraries:
-    simLibs = []    # Libraries for simple experiment
-    rUnLibs = []    # Libraries for read until experiment
-    inLibs = []     # Library specifications from input file
+    simple_experiment_libraries = []    # Libraries for simple experiment
+    read_until_experiment_libraries = []    # Libraries for read until experiment
+    input_libraries = []     # Library specifications from input file
 
     # Open input file
     if (len(args) > 2):
@@ -241,19 +241,19 @@ def main():
         parser.print_help()
 
     try:
-        inp = open(args[0], 'r')
+        library_input_file = open(args[0], 'r')
     except:
         print("ERROR: No input file given or file not found\n")
         parser.print_help()
         quit()
 
     # Open output file
-    fname = args[0] + "_results"
-    outfile = open(fname, "w")
+    filename = args[0] + "_results"
+    outfile = open(filename, "w")
     outfile.write("Parameters for this run were:\n")
 
     # Read input, add to results file for posterity
-    for line in inp:
+    for line in library_input_file:
         outfile.write(line)
         inline = line.split()
 
@@ -263,87 +263,85 @@ def main():
             except:
                 pass
 
-        inLibs.append(inline)
+        input_libraries.append(inline)
 
 
-    inp.close()
+    library_input_file.close()
     outfile.write("\n")
 
     # Initialise library objects from input
-    for i in range(0, len(inLibs)):
-        simLibs.append(lib.Library(inLibs[i][0], inLibs[i][1],
-                       inLibs[i][2], scale, mapReads, inLibs[i][3]))
+    for i in range(0, len(input_libraries)):
+        simple_experiment_libraries.append(lib.Library(input_libraries[i][0], input_libraries[i][1],
+                                           input_libraries[i][2], scale_value, map_reads, input_libraries[i][3]))
 
-        rUnLibs.append(lib.Library(inLibs[i][0], inLibs[i][1],
-                       inLibs[i][2], scale, mapReads, inLibs[i][3]))
+        read_until_experiment_libraries.append(lib.Library(input_libraries[i][0], input_libraries[i][1],
+                                               input_libraries[i][2], scale_value, map_reads, input_libraries[i][3]))
 
-
-    #####
     # Run the simple experiment
-    simTotT = 0                # Variable for recording total duration
-    simReads = []              # List of read lengths
-    simBases = 0               # Total bases sequenced
+    simple_experiment_duration = 0
+    simple_experiment_read_lengths = []
+    simple_experiment_bases = 0
 
     print("Performing Simple Run:")
-    while incomplete(simLibs):
-        (runTime, read, sequenced) = simple_run(simLibs, speed, interval)
-        simTotT += runTime
-        simReads.append(read)
-        simBases += sequenced
+    while incomplete(simple_experiment_libraries):
+        (runTime, read, sequenced) = simple_run(simple_experiment_libraries, speed, interval)
+        simple_experiment_duration += runTime
+        simple_experiment_read_lengths.append(read)
+        simple_experiment_bases += sequenced
 
-    simAvgRead = int(np.mean(simReads))  # Average read length for simple
+    simple_experiment_average_read_length = int(np.mean(simple_experiment_read_lengths))
 
     outfile.write("Non-Read Until Results:\n")
-    for obj in simLibs:
+    for obj in simple_experiment_libraries:
         output = results(obj)
         print(str(obj.get_coverage()) + " bases sequenced")
         outfile.write(output + "\n")
 
-    outfile.write("\nTotal Simple run time = {0}\n".format(hours(simTotT)))
-    print("\nTotal Simple run time = {0}\n".format(hours(simTotT)))
+    outfile.write("\nTotal Simple run time = {0}\n".format(hours(simple_experiment_duration)))
+    print("\nTotal Simple run time = {0}\n".format(hours(simple_experiment_duration)))
 
-    for i in range(0, len(simLibs)):
-        graphs(simLibs[i], "_no_read_until", graph)
+    for i in range(0, len(simple_experiment_libraries)):
+        graphs(simple_experiment_libraries[i], "_no_read_until", graph)
 
-
-    #####
     # Run the read until experiment
-    rUnTotT = 0                # Variable for recording total duration
-    rUnReads = []              # List of read lengths
-    rUnBases = 0               # Total bases sequenced
+    read_until_experiment_duration = 0
+    read_until_experiment_read_lengths = []
+    read_until_experiment_bases = 0
 
     print("\nPerforming Read Until Run:")
-    while incomplete(rUnLibs):
-        (runTime, read, sequenced) = read_until_run(rUnLibs, speed, interval, idLag, rejTime)
-        rUnTotT += runTime
-        rUnReads.append(read)
-        rUnBases += sequenced
+    while incomplete(read_until_experiment_libraries):
+        (runTime, read, sequenced) = read_until_run(read_until_experiment_libraries, speed, interval,
+                                                    identification_lag, rejection_time)
+        read_until_experiment_duration += runTime
+        read_until_experiment_read_lengths.append(read)
+        read_until_experiment_bases += sequenced
 
-    rUnAvgRead = int(np.mean(rUnReads))   # Average read length for read until
+    read_until_experiment_average_read_length = int(np.mean(read_until_experiment_read_lengths))
 
     outfile.write("\nRead Until Results:\n")
-    for obj in rUnLibs:
+    for obj in read_until_experiment_libraries:
         output = results(obj)
         print(str(obj.get_coverage()) + " bases sequenced")
         outfile.write(output + "\n")
 
-    outfile.write("\nTotal Read Until run time = {0}\n".format(hours(rUnTotT)))
-    print("\nTotal Read Until run time = {0}\n".format(hours(rUnTotT)))
+    outfile.write("\nTotal Read Until run time = {0}\n".format(hours(read_until_experiment_duration)))
+    print("\nTotal Read Until run time = {0}\n".format(hours(read_until_experiment_duration)))
 
-    for i in range(0, len(rUnLibs)):
-        graphs(rUnLibs[i], "_read_until", graph)
+    for i in range(0, len(read_until_experiment_libraries)):
+        graphs(read_until_experiment_libraries[i], "_read_until", graph)
 
-    readAvg = np.mean((simAvgRead, rUnAvgRead))
-    readAvg = round(readAvg,)
+    overall_mean_read_length = np.mean((simple_experiment_average_read_length,
+                                        read_until_experiment_average_read_length))
+    overall_mean_read_length = round(overall_mean_read_length,)
 
     # Output .tsv if needed
     header = ("Name\tSpeed\tInterval\tRejPen\tIdLag\tSimple.Hours"
               "\tRead.Until.Hours\tSimple.Bases\tRead.Until.Bases\tAvg.Read"
               "\tFold.Change.Hours\tFold.Change.Bases\n")
-    simH = int(simTotT / 3600)
-    rUnH = int(rUnTotT / 3600)
-    fcHours = round((simH / rUnH), 3)
-    fcBases = round((simBases / rUnBases), 3)
+    simple_experiment_hours = int(simple_experiment_duration / 3600)
+    read_until_experiment_hours = int(read_until_experiment_duration / 3600)
+    fold_change_hours = round((simple_experiment_hours / read_until_experiment_hours), 3)
+    fold_change_bases = round((simple_experiment_bases / read_until_experiment_bases), 3)
 
     if options.filename is not None:
         os.system('touch ' + options.filename)
@@ -354,9 +352,10 @@ def main():
         with open(options.filename, "a") as values:
             values.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}"
                          "\t{7}\t{8}\t{9}\t{10}\t{11}\n"
-                         .format(experimentName, speed, interval, rejPen, idLag,
-                                 simH, rUnH, simBases, rUnBases, readAvg, fcHours,
-                                 fcBases))
+                         .format(experiment_name, speed, interval, rejection_penalty, identification_lag,
+                                 simple_experiment_hours, read_until_experiment_hours, simple_experiment_bases,
+                                 read_until_experiment_bases, overall_mean_read_length, fold_change_hours,
+                                 fold_change_bases))
 
     # Finishing
     end = time.time()
@@ -369,5 +368,4 @@ def main():
     outfile.close()
 
 if __name__ == "__main__":
-    print("MAIN")
     main()
