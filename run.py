@@ -68,7 +68,7 @@ parser.add_option("-n", "--name", dest="name",
 
 
 # This method checks a list of library objects to see if all are complete
-def Incomplete(libraries):
+def incomplete(libraries):
     for i in range(0, len(libraries)):
         if libraries[i].get_complete() == 0:
             return 1
@@ -79,11 +79,11 @@ def Incomplete(libraries):
 
 
 # Simulates an experiment without read until
-def SimpleRun(simLibs1):
+def simple_run(simLibs1):
 
-    sel = Select(simLibs1)
+    sel = select(simLibs1)
 
-    simRunT, readLen = Pore(simLibs1[sel])
+    simRunT, readLen = pore(simLibs1[sel])
     # For SimpleRun(), sequenced is identical to readLen but is included for
     # symmetry with ReadUntil()
     sequenced = readLen
@@ -92,9 +92,9 @@ def SimpleRun(simLibs1):
 
 
 # Simulates an experiment with read until
-def ReadUntil(rUnLibs1):
+def read_until_run(rUnLibs1):
 
-    sel = Select(rUnLibs1)
+    sel = select(rUnLibs1)
 
     # If coverage of the library has been achieved:
     if rUnLibs1[sel].get_coverage() >= rUnLibs1[sel].get_needed():
@@ -126,7 +126,7 @@ def ReadUntil(rUnLibs1):
 
     # Sequence the read as normal:
     else:
-        untRunT, readLen = Pore(rUnLibs1[sel])
+        untRunT, readLen = pore(rUnLibs1[sel])
         sequenced = readLen
 
     # Return time taken to sequence:
@@ -134,7 +134,7 @@ def ReadUntil(rUnLibs1):
 
 
 # Selects a library to produce a read from
-def Select(simLibs2):
+def select(simLibs2):
     bag = 0
     for obj in simLibs2:
         entries = obj.gsize * obj.ratio
@@ -155,7 +155,7 @@ def Select(simLibs2):
 
 
 # Simulates the passage of sequence through pore
-def Pore(selection):
+def pore(selection):
     read = selection.get_read()
     readLen = read[1] - read[0]
     seqTime = (readLen / speed) + interval
@@ -166,7 +166,7 @@ def Pore(selection):
 
 
 # Converts seconds to hours, rounded to nearest second. Returns a string
-def Hours(seconds):
+def hours(seconds):
     m, s = divmod(seconds, 60)
     h, m = divmod(m, 60)
 
@@ -176,8 +176,8 @@ def Hours(seconds):
 
 
 # Provides a string for reporting on the results of a given library
-def Results(library):
-    timeOut = Hours(library.get_duration())
+def results(library):
+    timeOut = hours(library.get_duration())
     cover = library.get_cov_ratio()
 
     output = ("{0}: {1} to complete, {2:.1f}x coverage "
@@ -189,7 +189,7 @@ def Results(library):
 
 
 # Produces and saves a graph for a given library
-def Graphs(lib, suffix):
+def graphs(lib, suffix):
     if options.graph is False:
         return
 
@@ -284,8 +284,8 @@ simReads = []              # List of read lengths
 simBases = 0               # Total bases sequenced
 
 print("Performing Simple Run:")
-while Incomplete(simLibs):
-    (runTime, read, sequenced) = SimpleRun(simLibs)
+while incomplete(simLibs):
+    (runTime, read, sequenced) = simple_run(simLibs)
     simTotT += runTime
     simReads.append(read)
     simBases += sequenced
@@ -294,15 +294,15 @@ simAvgRead = int(np.mean(simReads))  # Average read length for simple
 
 outfile.write("Non-Read Until Results:\n")
 for obj in simLibs:
-    output = Results(obj)
+    output = results(obj)
     print(str(obj.get_coverage()) + " bases sequenced")
     outfile.write(output + "\n")
 
-outfile.write("\nTotal Simple run time = {0}\n".format(Hours(simTotT)))
-print("\nTotal Simple run time = {0}\n".format(Hours(simTotT)))
+outfile.write("\nTotal Simple run time = {0}\n".format(hours(simTotT)))
+print("\nTotal Simple run time = {0}\n".format(hours(simTotT)))
 
 for i in range(0, len(simLibs)):
-    Graphs(simLibs[i], "_no_read_until")
+    graphs(simLibs[i], "_no_read_until")
 
 
 #####
@@ -312,8 +312,8 @@ rUnReads = []              # List of read lengths
 rUnBases = 0               # Total bases sequenced
 
 print("\nPerforming Read Until Run:")
-while Incomplete(rUnLibs):
-    (runTime, read, sequenced) = ReadUntil(rUnLibs)
+while incomplete(rUnLibs):
+    (runTime, read, sequenced) = read_until_run(rUnLibs)
     rUnTotT += runTime
     rUnReads.append(read)
     rUnBases += sequenced
@@ -322,15 +322,15 @@ rUnAvgRead = int(np.mean(rUnReads))   # Average read length for read until
 
 outfile.write("\nRead Until Results:\n")
 for obj in rUnLibs:
-    output = Results(obj)
+    output = results(obj)
     print(str(obj.get_coverage()) + " bases sequenced")
     outfile.write(output + "\n")
 
-outfile.write("\nTotal Read Until run time = {0}\n".format(Hours(rUnTotT)))
-print("\nTotal Read Until run time = {0}\n".format(Hours(rUnTotT)))
+outfile.write("\nTotal Read Until run time = {0}\n".format(hours(rUnTotT)))
+print("\nTotal Read Until run time = {0}\n".format(hours(rUnTotT)))
 
 for i in range(0, len(rUnLibs)):
-    Graphs(rUnLibs[i], "_read_until")
+    graphs(rUnLibs[i], "_read_until")
 
 readAvg = np.mean((simAvgRead, rUnAvgRead))
 readAvg = round(readAvg,)
