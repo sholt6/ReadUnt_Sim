@@ -15,56 +15,54 @@ from optparse import OptionParser
 
 start = time.time()
 
-# Defining options:
-usage = ("usage: %prog [input_file] args\n\n"
-         "Input files should contain parameters for required libraries\n"
-         "and should be in a tab-separated format as follows:\n"
-         "<number of bases>   <ratio>   <coverage desired>   <name>\n"
-         "For example:\n"
-         "5000000    3    30    \"Genome_A\"\n"
-         "7000000    1    30    \"Genome_B\"\n")
+def parse_options():
+    usage = ("usage: %prog [input_file] args\n\n"
+             "Input files should contain parameters for required libraries\n"
+             "and should be in a tab-separated format as follows:\n"
+             "<number of bases>   <ratio>   <coverage desired>   <name>\n"
+             "For example:\n"
+             "5000000    3    30    \"Genome_A\"\n"
+             "7000000    1    30    \"Genome_B\"\n")
 
-parser = OptionParser(usage=usage)
+    parser = OptionParser(usage=usage)
 
-parser.add_option("-f", "--file", dest="filename",
-                  help="name of tsv for graphing vals", type="string")
+    parser.add_option("-f", "--file", dest="filename",
+                      help="name of tsv for graphing vals", type="string")
 
-parser.add_option("-g", "--graph", dest="graph",
-                  help="graphs are output only if this flag is specified",
-                  action="store_true", default=False)
+    parser.add_option("-g", "--graph", dest="graph",
+                      help="graphs are output only if this flag is specified",
+                      action="store_true", default=False)
 
-parser.add_option("-m", "--map", dest="map",
-                  help="store a coverage map of each library",
-                  action="store_true", default=False)
+    parser.add_option("-m", "--map", dest="map",
+                      help="store a coverage map of each library",
+                      action="store_true", default=False)
 
-parser.add_option("-s", "--speed", dest="speed",
-                  help="speed of sequencing (b/s), def = 450",
-                  type="int", default=450)
+    parser.add_option("-s", "--speed", dest="speed",
+                      help="speed of sequencing (b/s), def = 450",
+                      type="int", default=450)
 
-parser.add_option("-i", "--interval", dest="interval",
-                  help="interval between strands (s), def = 1",
-                  type="float", default=1)
+    parser.add_option("-i", "--interval", dest="interval",
+                      help="interval between strands (s), def = 1",
+                      type="float", default=1)
 
-parser.add_option("-r", "--rejPen", dest="rejPen",
-                  help="penalty for rejecting read (s), def = 1",
-                  type="float", default=1)
+    parser.add_option("-r", "--rejPen", dest="rejPen",
+                      help="penalty for rejecting read (s), def = 1",
+                      type="float", default=1)
 
-parser.add_option("-l", "--idLag", dest="idLag",
-                  help="bases needed to map strands (b), def = 500",
-                  type="int", default=500)
+    parser.add_option("-l", "--idLag", dest="idLag",
+                      help="bases needed to map strands (b), def = 500",
+                      type="int", default=500)
 
-parser.add_option("-c", "--scale", dest="scale",
-                  help="scale value for read generator, def = 3000,",
-                  type="float", default=3000)
+    parser.add_option("-c", "--scale", dest="scale",
+                      help="scale value for read generator, def = 3000,",
+                      type="float", default=3000)
 
-parser.add_option("-n", "--name", dest="name",
-                  help="optional name for this run in .tsv output from -f",
-                  type="string", default="NA")
+    parser.add_option("-n", "--name", dest="name",
+                      help="optional name for this run in .tsv output from -f",
+                      type="string", default="NA")
 
-(options, args) = parser.parse_args()
+    return parser
 
-
-# FUNCTIONS
 
 
 # This method checks a list of library objects to see if all are complete
@@ -79,11 +77,11 @@ def incomplete(libraries):
 
 
 # Simulates an experiment without read until
-def simple_run(simLibs1):
+def simple_run(simLibs1, speed, interval):
 
     sel = select(simLibs1)
 
-    simRunT, readLen = pore(simLibs1[sel])
+    simRunT, readLen = pore(simLibs1[sel], speed, interval)
     # For SimpleRun(), sequenced is identical to readLen but is included for
     # symmetry with ReadUntil()
     sequenced = readLen
@@ -92,7 +90,7 @@ def simple_run(simLibs1):
 
 
 # Simulates an experiment with read until
-def read_until_run(rUnLibs1):
+def read_until_run(rUnLibs1, speed, interval, idLag, rejTime):
 
     sel = select(rUnLibs1)
 
@@ -126,7 +124,7 @@ def read_until_run(rUnLibs1):
 
     # Sequence the read as normal:
     else:
-        untRunT, readLen = pore(rUnLibs1[sel])
+        untRunT, readLen = pore(rUnLibs1[sel], speed, interval)
         sequenced = readLen
 
     # Return time taken to sequence:
@@ -155,7 +153,7 @@ def select(simLibs2):
 
 
 # Simulates the passage of sequence through pore
-def pore(selection):
+def pore(selection, speed, interval):
     read = selection.get_read()
     readLen = read[1] - read[0]
     seqTime = (readLen / speed) + interval
@@ -189,8 +187,8 @@ def results(library):
 
 
 # Produces and saves a graph for a given library
-def graphs(lib, suffix):
-    if options.graph is False:
+def graphs(lib, suffix, graph):
+    if graph is False:
         return
 
     data = np.zeros((1, int(lib.gsize)))
@@ -211,158 +209,165 @@ def graphs(lib, suffix):
     plt.close()
 
 
-# FUNCTIONS END
+def main():
 
-# Define speed of sequencing, interval between sequences, time lost to each
-# rejection and coverage desired
-experimentName = options.name
-speed = options.speed          # rate of sequencing - bases/s
-interval = options.interval    # time taken for a pore to acquire new strand
-rejPen = options.rejPen        # time taken to reject a strand
-idLag = options.idLag          # no. bases needed to map a strand
-scale = options.scale          # scale value for read generator
-rejTime = (interval + rejPen + (idLag/speed))
+    parser = parse_options()
+    (options, args) = parser.parse_args()
+    # Define speed of sequencing, interval between sequences, time lost to each
+    # rejection and coverage desired
+    experimentName = options.name
+    speed = options.speed          # rate of sequencing - bases/s
+    interval = options.interval    # time taken for a pore to acquire new strand
+    rejPen = options.rejPen        # time taken to reject a strand
+    idLag = options.idLag          # no. bases needed to map a strand
+    scale = options.scale          # scale value for read generator
+    graph = options.graph
+    rejTime = (interval + rejPen + (idLag/speed))
 
-if options.graph is True:
-    options.map = True
+    if options.graph is True:
+        options.map = True
 
-mapReads = options.map
+    mapReads = options.map
 
-#####
-# Create requisite libraries:
-simLibs = []    # Libraries for simple experiment
-rUnLibs = []    # Libraries for read until experiment
-inLibs = []     # Library specifications from input file
+    #####
+    # Create requisite libraries:
+    simLibs = []    # Libraries for simple experiment
+    rUnLibs = []    # Libraries for read until experiment
+    inLibs = []     # Library specifications from input file
 
-# Open input file
-if (len(args) > 2):
-    print("Too many arguments given\n")
-    parser.print_help()
+    # Open input file
+    if (len(args) > 2):
+        print("Too many arguments given\n")
+        parser.print_help()
 
-try:
-    inp = open(args[0], 'r')
-except:
-    print("ERROR: No input file given or file not found\n")
-    parser.print_help()
-    quit()
+    try:
+        inp = open(args[0], 'r')
+    except:
+        print("ERROR: No input file given or file not found\n")
+        parser.print_help()
+        quit()
 
-# Open output file
-fname = args[0] + "_results"
-outfile = open(fname, "w")
-outfile.write("Parameters for this run were:\n")
+    # Open output file
+    fname = args[0] + "_results"
+    outfile = open(fname, "w")
+    outfile.write("Parameters for this run were:\n")
 
-# Read input, add to results file for posterity
-for line in inp:
-    outfile.write(line)
-    inline = line.split()
+    # Read input, add to results file for posterity
+    for line in inp:
+        outfile.write(line)
+        inline = line.split()
 
-    for i in range(0, len(inline)):
-        try:
-            inline[i] = float(inline[i])
-        except:
-            pass
+        for i in range(0, len(inline)):
+            try:
+                inline[i] = float(inline[i])
+            except:
+                pass
 
-    inLibs.append(inline)
-
-
-inp.close()
-outfile.write("\n")
-
-# Initialise library objects from input
-for i in range(0, len(inLibs)):
-    simLibs.append(lib.Library(inLibs[i][0], inLibs[i][1],
-                   inLibs[i][2], scale, mapReads, inLibs[i][3]))
-
-    rUnLibs.append(lib.Library(inLibs[i][0], inLibs[i][1],
-                   inLibs[i][2], scale, mapReads, inLibs[i][3]))
+        inLibs.append(inline)
 
 
-#####
-# Run the simple experiment
-simTotT = 0                # Variable for recording total duration
-simReads = []              # List of read lengths
-simBases = 0               # Total bases sequenced
+    inp.close()
+    outfile.write("\n")
 
-print("Performing Simple Run:")
-while incomplete(simLibs):
-    (runTime, read, sequenced) = simple_run(simLibs)
-    simTotT += runTime
-    simReads.append(read)
-    simBases += sequenced
+    # Initialise library objects from input
+    for i in range(0, len(inLibs)):
+        simLibs.append(lib.Library(inLibs[i][0], inLibs[i][1],
+                       inLibs[i][2], scale, mapReads, inLibs[i][3]))
 
-simAvgRead = int(np.mean(simReads))  # Average read length for simple
-
-outfile.write("Non-Read Until Results:\n")
-for obj in simLibs:
-    output = results(obj)
-    print(str(obj.get_coverage()) + " bases sequenced")
-    outfile.write(output + "\n")
-
-outfile.write("\nTotal Simple run time = {0}\n".format(hours(simTotT)))
-print("\nTotal Simple run time = {0}\n".format(hours(simTotT)))
-
-for i in range(0, len(simLibs)):
-    graphs(simLibs[i], "_no_read_until")
+        rUnLibs.append(lib.Library(inLibs[i][0], inLibs[i][1],
+                       inLibs[i][2], scale, mapReads, inLibs[i][3]))
 
 
-#####
-# Run the read until experiment
-rUnTotT = 0                # Variable for recording total duration
-rUnReads = []              # List of read lengths
-rUnBases = 0               # Total bases sequenced
+    #####
+    # Run the simple experiment
+    simTotT = 0                # Variable for recording total duration
+    simReads = []              # List of read lengths
+    simBases = 0               # Total bases sequenced
 
-print("\nPerforming Read Until Run:")
-while incomplete(rUnLibs):
-    (runTime, read, sequenced) = read_until_run(rUnLibs)
-    rUnTotT += runTime
-    rUnReads.append(read)
-    rUnBases += sequenced
+    print("Performing Simple Run:")
+    while incomplete(simLibs):
+        (runTime, read, sequenced) = simple_run(simLibs, speed, interval)
+        simTotT += runTime
+        simReads.append(read)
+        simBases += sequenced
 
-rUnAvgRead = int(np.mean(rUnReads))   # Average read length for read until
+    simAvgRead = int(np.mean(simReads))  # Average read length for simple
 
-outfile.write("\nRead Until Results:\n")
-for obj in rUnLibs:
-    output = results(obj)
-    print(str(obj.get_coverage()) + " bases sequenced")
-    outfile.write(output + "\n")
+    outfile.write("Non-Read Until Results:\n")
+    for obj in simLibs:
+        output = results(obj)
+        print(str(obj.get_coverage()) + " bases sequenced")
+        outfile.write(output + "\n")
 
-outfile.write("\nTotal Read Until run time = {0}\n".format(hours(rUnTotT)))
-print("\nTotal Read Until run time = {0}\n".format(hours(rUnTotT)))
+    outfile.write("\nTotal Simple run time = {0}\n".format(hours(simTotT)))
+    print("\nTotal Simple run time = {0}\n".format(hours(simTotT)))
 
-for i in range(0, len(rUnLibs)):
-    graphs(rUnLibs[i], "_read_until")
+    for i in range(0, len(simLibs)):
+        graphs(simLibs[i], "_no_read_until", graph)
 
-readAvg = np.mean((simAvgRead, rUnAvgRead))
-readAvg = round(readAvg,)
 
-# Output .tsv if needed
-header = ("Name\tSpeed\tInterval\tRejPen\tIdLag\tSimple.Hours"
-          "\tRead.Until.Hours\tSimple.Bases\tRead.Until.Bases\tAvg.Read"
-          "\tFold.Change.Hours\tFold.Change.Bases\n")
-simH = int(simTotT / 3600)
-rUnH = int(rUnTotT / 3600)
-fcHours = round((simH / rUnH), 3)
-fcBases = round((simBases / rUnBases), 3)
+    #####
+    # Run the read until experiment
+    rUnTotT = 0                # Variable for recording total duration
+    rUnReads = []              # List of read lengths
+    rUnBases = 0               # Total bases sequenced
 
-if options.filename is not None:
-    os.system('touch ' + options.filename)
-    if os.stat(options.filename).st_size == 0:
-        with open(options.filename, "w") as values:
-            values.write(header)
+    print("\nPerforming Read Until Run:")
+    while incomplete(rUnLibs):
+        (runTime, read, sequenced) = read_until_run(rUnLibs, speed, interval, idLag, rejTime)
+        rUnTotT += runTime
+        rUnReads.append(read)
+        rUnBases += sequenced
 
-    with open(options.filename, "a") as values:
-        values.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}"
-                     "\t{7}\t{8}\t{9}\t{10}\t{11}\n"
-                     .format(experimentName, speed, interval, rejPen, idLag,
-                             simH, rUnH, simBases, rUnBases, readAvg, fcHours,
-                             fcBases))
+    rUnAvgRead = int(np.mean(rUnReads))   # Average read length for read until
 
-# Finishing
-end = time.time()
+    outfile.write("\nRead Until Results:\n")
+    for obj in rUnLibs:
+        output = results(obj)
+        print(str(obj.get_coverage()) + " bases sequenced")
+        outfile.write(output + "\n")
 
-outfile.write("\nThis script took {0:.3f} seconds to complete"
-              .format(end - start))
-print("\nThis script took {0:.3f} seconds to complete"
-      .format(end - start))
+    outfile.write("\nTotal Read Until run time = {0}\n".format(hours(rUnTotT)))
+    print("\nTotal Read Until run time = {0}\n".format(hours(rUnTotT)))
 
-outfile.close()
+    for i in range(0, len(rUnLibs)):
+        graphs(rUnLibs[i], "_read_until", graph)
+
+    readAvg = np.mean((simAvgRead, rUnAvgRead))
+    readAvg = round(readAvg,)
+
+    # Output .tsv if needed
+    header = ("Name\tSpeed\tInterval\tRejPen\tIdLag\tSimple.Hours"
+              "\tRead.Until.Hours\tSimple.Bases\tRead.Until.Bases\tAvg.Read"
+              "\tFold.Change.Hours\tFold.Change.Bases\n")
+    simH = int(simTotT / 3600)
+    rUnH = int(rUnTotT / 3600)
+    fcHours = round((simH / rUnH), 3)
+    fcBases = round((simBases / rUnBases), 3)
+
+    if options.filename is not None:
+        os.system('touch ' + options.filename)
+        if os.stat(options.filename).st_size == 0:
+            with open(options.filename, "w") as values:
+                values.write(header)
+
+        with open(options.filename, "a") as values:
+            values.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}"
+                         "\t{7}\t{8}\t{9}\t{10}\t{11}\n"
+                         .format(experimentName, speed, interval, rejPen, idLag,
+                                 simH, rUnH, simBases, rUnBases, readAvg, fcHours,
+                                 fcBases))
+
+    # Finishing
+    end = time.time()
+
+    outfile.write("\nThis script took {0:.3f} seconds to complete"
+                  .format(end - start))
+    print("\nThis script took {0:.3f} seconds to complete"
+          .format(end - start))
+
+    outfile.close()
+
+if __name__ == "__main__":
+    print("MAIN")
+    main()
