@@ -229,30 +229,26 @@ def main():
 
     map_reads = options.map
 
-    #####
-    # Create requisite libraries:
-    simple_experiment_libraries = []    # Libraries for simple experiment
-    read_until_experiment_libraries = []    # Libraries for read until experiment
-    input_libraries = []     # Library specifications from input file
+    simple_experiment_libraries = []
+    read_until_experiment_libraries = []
+    input_libraries = []
 
-    # Open input file
-    if (len(args) > 2):
+    if len(args) > 2:
         print("Too many arguments given\n")
         parser.print_help()
 
+    library_input_file = None
     try:
         library_input_file = open(args[0], 'r')
-    except:
+    except FileNotFoundError:
         print("ERROR: No input file given or file not found\n")
         parser.print_help()
         quit()
 
-    # Open output file
     filename = args[0] + "_results"
     outfile = open(filename, "w")
     outfile.write("Parameters for this run were:\n")
 
-    # Read input, add to results file for posterity
     for line in library_input_file:
         outfile.write(line)
         inline = line.split()
@@ -260,16 +256,14 @@ def main():
         for i in range(0, len(inline)):
             try:
                 inline[i] = float(inline[i])
-            except:
+            except ValueError:
                 pass
 
         input_libraries.append(inline)
 
-
     library_input_file.close()
     outfile.write("\n")
 
-    # Initialise library objects from input
     for i in range(0, len(input_libraries)):
         simple_experiment_libraries.append(lib.Library(input_libraries[i][0], input_libraries[i][1],
                                            input_libraries[i][2], scale_value, map_reads, input_libraries[i][3]))
@@ -277,17 +271,16 @@ def main():
         read_until_experiment_libraries.append(lib.Library(input_libraries[i][0], input_libraries[i][1],
                                                input_libraries[i][2], scale_value, map_reads, input_libraries[i][3]))
 
-    # Run the simple experiment
     simple_experiment_duration = 0
     simple_experiment_read_lengths = []
     simple_experiment_bases = 0
 
     print("Performing Simple Run:")
     while check_library_completion(simple_experiment_libraries):
-        (runTime, read, sequenced) = run_simple_experiment(simple_experiment_libraries, speed, interval)
-        simple_experiment_duration += runTime
+        (run_duration, read, sequenced) = run_simple_experiment(simple_experiment_libraries, speed, interval)
+        simple_experiment_duration = run_duration
         simple_experiment_read_lengths.append(read)
-        simple_experiment_bases += sequenced
+        simple_experiment_bases = sequenced
 
     simple_experiment_average_read_length = int(np.mean(simple_experiment_read_lengths))
 
@@ -303,16 +296,15 @@ def main():
     for i in range(0, len(simple_experiment_libraries)):
         produce_library_graphs(simple_experiment_libraries[i], "_no_read_until", graph)
 
-    # Run the read until experiment
     read_until_experiment_duration = 0
     read_until_experiment_read_lengths = []
     read_until_experiment_bases = 0
 
     print("\nPerforming Read Until Run:")
     while check_library_completion(read_until_experiment_libraries):
-        (runTime, read, sequenced) = run_read_until_experiment(read_until_experiment_libraries, speed, interval,
-                                                               identification_lag, rejection_time)
-        read_until_experiment_duration += runTime
+        (run_duration, read, sequenced) = run_read_until_experiment(read_until_experiment_libraries, speed, interval,
+                                                                    identification_lag, rejection_time)
+        read_until_experiment_duration += run_duration
         read_until_experiment_read_lengths.append(read)
         read_until_experiment_bases += sequenced
 
@@ -357,7 +349,6 @@ def main():
                                  read_until_experiment_bases, overall_mean_read_length, fold_change_hours,
                                  fold_change_bases))
 
-    # Finishing
     end = time.time()
 
     outfile.write("\nThis script took {0:.3f} seconds to complete"
@@ -366,6 +357,7 @@ def main():
           .format(end - start))
 
     outfile.close()
+
 
 if __name__ == "__main__":
     main()
