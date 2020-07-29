@@ -77,64 +77,58 @@ def check_library_completion(libraries):
 
 
 # Simulates an experiment without read until
-def run_simple_experiment(simLibs1, speed, interval):
+def run_simple_experiment(simple_experiment_libraries, speed, interval):
 
-    sel = select_library(simLibs1)
+    sel = select_library(simple_experiment_libraries)
 
-    simRunT, readLen = pore_passage(simLibs1[sel], speed, interval)
+    run_duration, read_length = pore_passage(simple_experiment_libraries[sel], speed, interval)
     # For SimpleRun(), sequenced is identical to readLen but is included for
     # symmetry with ReadUntil()
-    sequenced = readLen
+    sequenced = read_length
 
-    return simRunT, readLen, sequenced
+    return run_duration, read_length, sequenced
 
 
 # Simulates an experiment with read until
-def run_read_until_experiment(rUnLibs1, speed, interval, idLag, rejTime):
+def run_read_until_experiment(read_until_experiment_libraries, speed, interval, identification_lag, rejection_time):
 
-    sel = select_library(rUnLibs1)
+    sel = select_library(read_until_experiment_libraries)
 
     # If coverage of the library has been achieved:
-    if rUnLibs1[sel].get_coverage() >= rUnLibs1[sel].get_needed():
-        read = rUnLibs1[sel].get_read()
-        readLen = read[1] - read[0]
-        seqTime = (readLen / speed) + interval
+    if read_until_experiment_libraries[sel].get_coverage() >= read_until_experiment_libraries[sel].get_needed():
+        read = read_until_experiment_libraries[sel].get_read()
+        read_length = read[1] - read[0]
+        sequencing_time = (read_length / speed) + interval
 
         # If the read is shorter than the amount needed to id it:
-        if readLen < idLag:
-            rUnLibs1[sel].add_duration(seqTime)
-            rUnLibs1[sel].add_coverage(readLen, read[0])
-            sequenced = readLen
+        if read_length < identification_lag:
+            read_until_experiment_libraries[sel].add_duration(sequencing_time)
+            read_until_experiment_libraries[sel].add_coverage(read_length, read[0])
+            sequenced = read_length
 
-            try:
-                assert(readLen < idLag)
-            except:
-                print("Read Until method mishandled a >500b read")
-                quit()
-
-            return seqTime, readLen, sequenced
+            return sequencing_time, read_length, sequenced
 
         # Reject the read:
         else:
-            rUnLibs1[sel].add_duration(rejTime)
-            rUnLibs1[sel].add_coverage(idLag, read[0])
-            sequenced = idLag
+            read_until_experiment_libraries[sel].add_duration(rejection_time)
+            read_until_experiment_libraries[sel].add_coverage(identification_lag, read[0])
+            sequenced = identification_lag
 
-            return rejTime, readLen, sequenced
+            return rejection_time, read_length, sequenced
 
     # Sequence the read as normal:
     else:
-        untRunT, readLen = pore_passage(rUnLibs1[sel], speed, interval)
-        sequenced = readLen
+        read_duration, read_length = pore_passage(read_until_experiment_libraries[sel], speed, interval)
+        sequenced = read_length
 
     # Return time taken to sequence:
-    return untRunT, readLen, sequenced
+    return read_duration, read_length, sequenced
 
 
 # Selects a library to produce a read from
-def select_library(simLibs2):
+def select_library(library_list):
     bag = 0
-    for obj in simLibs2:
+    for obj in library_list:
         entries = obj.gsize * obj.ratio
         bag += entries
 
@@ -142,7 +136,7 @@ def select_library(simLibs2):
 
     cumulative = 0
     i = 0
-    for obj in simLibs2:
+    for obj in library_list:
         size = obj.gsize * obj.ratio
         cumulative += size
 
@@ -155,12 +149,12 @@ def select_library(simLibs2):
 # Simulates the passage of sequence through pore
 def pore_passage(selection, speed, interval):
     read = selection.get_read()
-    readLen = read[1] - read[0]
-    seqTime = (readLen / speed) + interval
+    read_length = read[1] - read[0]
+    sequencing_time = (read_length / speed) + interval
 
-    selection.add_coverage(readLen, read[0])
-    selection.add_duration(seqTime)
-    return seqTime, readLen
+    selection.add_coverage(read_length, read[0])
+    selection.add_duration(sequencing_time)
+    return sequencing_time, read_length
 
 
 # Converts seconds to hours, rounded to nearest second. Returns a string
@@ -168,43 +162,43 @@ def hours_to_seconds(seconds):
     m, s = divmod(seconds, 60)
     h, m = divmod(m, 60)
 
-    tTot = "{0:.0f}:{1:02d}:{2:02d}".format(h, int(m), int(s))
+    time_string = "{0:.0f}:{1:02d}:{2:02d}".format(h, int(m), int(s))
 
-    return(tTot)
+    return time_string
 
 
 # Provides a string for reporting on the results of a given library
 def report_library_results(library):
-    timeOut = hours_to_seconds(library.get_duration())
+    time_out = hours_to_seconds(library.get_duration())
     cover = library.get_cov_ratio()
 
     output = ("{0}: {1} to complete, {2:.1f}x coverage "
-              .format(library.get_name(), timeOut, cover))
+              .format(library.get_name(), time_out, cover))
 
     print(output)
 
-    return(output)
+    return output
 
 
 # Produces and saves a graph for a given library
-def produce_library_graphs(lib, suffix, graph):
+def produce_library_graphs(library, suffix, graph):
     if graph is False:
         return
 
-    data = np.zeros((1, int(lib.gsize)))
+    data = np.zeros((1, int(library.gsize)))
 
     for i in range(0, len(data[0])):
         data[0][i] = data[0][i-1]
-        if i in lib.map:
-            data[0][i] += lib.map[i]
+        if i in library.map:
+            data[0][i] += library.map[i]
 
     plt.figure(figsize=(8, 6))
     plt.plot(data[0])
-    plt.title(lib.get_name() + suffix)
+    plt.title(library.get_name() + suffix)
     plt.ylabel('Coverage')
     plt.xlabel('Position (bp)')
 
-    name = (lib.get_name() + suffix)
+    name = (library.get_name() + suffix)
     plt.savefig(name)
     plt.close()
 
@@ -277,9 +271,9 @@ def main():
 
     print("Performing Simple Run:")
     while check_library_completion(simple_experiment_libraries):
-        (run_duration, read, sequenced) = run_simple_experiment(simple_experiment_libraries, speed, interval)
-        simple_experiment_duration = run_duration
-        simple_experiment_read_lengths.append(read)
+        (read_duration, read_length, sequenced) = run_simple_experiment(simple_experiment_libraries, speed, interval)
+        simple_experiment_duration = read_duration
+        simple_experiment_read_lengths.append(read_length)
         simple_experiment_bases = sequenced
 
     simple_experiment_average_read_length = int(np.mean(simple_experiment_read_lengths))
@@ -302,10 +296,10 @@ def main():
 
     print("\nPerforming Read Until Run:")
     while check_library_completion(read_until_experiment_libraries):
-        (run_duration, read, sequenced) = run_read_until_experiment(read_until_experiment_libraries, speed, interval,
-                                                                    identification_lag, rejection_time)
-        read_until_experiment_duration += run_duration
-        read_until_experiment_read_lengths.append(read)
+        (read_duration, read_length, sequenced) = run_read_until_experiment(read_until_experiment_libraries, speed,
+                                                                           interval, identification_lag, rejection_time)
+        read_until_experiment_duration += read_duration
+        read_until_experiment_read_lengths.append(read_length)
         read_until_experiment_bases += sequenced
 
     read_until_experiment_average_read_length = int(np.mean(read_until_experiment_read_lengths))
